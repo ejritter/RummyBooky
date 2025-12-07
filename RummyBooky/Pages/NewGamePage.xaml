@@ -1,0 +1,236 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<pages:BasePage x:Name="thisPage"
+                xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+                xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+                xmlns:android="clr-namespace:Microsoft.Maui.Controls.PlatformConfiguration.AndroidSpecific;assembly=Microsoft.Maui.Controls"
+                xmlns:pages="clr-namespace:RummyBooky.Pages"
+                xmlns:viewmodels="clr-namespace:RummyBooky.ViewModels"
+                xmlns:models="clr-namespace:RummyBooky.Models"
+                xmlns:views="clr-namespace:RummyBooky.Views"
+                x:Class="RummyBooky.Pages.NewGamePage"
+                x:DataType="viewmodels:NewGameViewModel"
+                x:TypeArguments="viewmodels:NewGameViewModel"
+                >
+    <!-- Fixed heights for form rows and header; give the list the remaining space -->
+    <Grid HorizontalOptions="Center"
+          VerticalOptions="Start"
+          ColumnDefinitions="*,*"
+          ColumnSpacing="25"
+          RowDefinitions="100,100,90,50,*,90">
+
+        <Label Grid.Column="0"
+               Grid.Row="0"
+               Style="{StaticResource TagLabelNoBackground}"
+               Text="Score Limit" 
+               HorizontalOptions="Start"
+               VerticalOptions="Center"/>
+        <Border Grid.Row="0"
+                Grid.Column="1" 
+                HorizontalOptions="End"
+                Style="{StaticResource TagEntryBorder}">
+            <Entry x:Name="EntryScore" 
+                   Placeholder="{Binding ScoreBoundaries}"
+                   Style="{StaticResource TagEntry}"
+                   Text="{Binding ScoreLimitText, Mode=TwoWay}"
+                   Keyboard="Numeric"/>
+        </Border>
+
+        <Label Grid.Column="0" 
+               Grid.Row="1"
+               Style="{StaticResource TagLabelNoBackground}"
+               Text="Player Name" 
+               HorizontalOptions="Start"
+               VerticalOptions="Center"/>
+        <Border Grid.Column="1"
+                Grid.Row="1"
+                HorizontalOptions="End"
+                Style="{StaticResource TagEntryBorder}">
+            <Entry x:Name="EntryPlayerName"
+                   Grid.Column="1"
+                   Grid.Row="1"
+                   Placeholder="{Binding PlayerBoundaries}"
+                   ReturnCommand="{Binding AddPlayerCommand}"
+                   ReturnCommandParameter="{Binding Source={x:Reference EntryPlayerName}}"
+                   Text="{Binding PlayerNameText, Mode=TwoWay}"
+                   Style="{StaticResource TagEntry}"/>
+        </Border>
+
+        <Border Grid.Column="1" 
+                Grid.Row="2" 
+                Style="{StaticResource TagButtonTransparentBorder}">
+            <Button Text="Add Player"
+                    WidthRequest="{Binding Source={x:Reference EntryScore}, Path=WidthRequest}"
+                    HorizontalOptions="End"
+                    Command="{Binding AddPlayerCommand}"
+                    CommandParameter="{Binding Source={x:Reference EntryPlayerName}}"/>
+        </Border>
+
+        <!-- Header: small banner + column captions; matches item template columns exactly -->
+        <Grid x:Name="GridTemplate"
+              IsVisible="{Binding ShowGridTemplate}"
+              Grid.ColumnSpan="2"
+              Grid.Row="3"
+              ColumnSpacing="0"
+              ColumnDefinitions="*,2,120,2,120,2,120"
+              RowDefinitions="60">
+            <BoxView Grid.RowSpan="2"
+                     Grid.Column="1"
+                     Grid.ColumnSpan="7"
+                     HorizontalOptions="Fill"
+                     VerticalOptions="Fill"
+                     Color="{AppThemeBinding Light={StaticResource Pink}, Dark={StaticResource DeepRed}}" />
+            
+            <Label Grid.Row="1" Grid.Column="0"
+                   Text=""
+                   VerticalOptions="Center"
+                   HorizontalOptions="Center"/>
+
+            <BoxView Grid.RowSpan="2"
+                     Grid.Column="1"
+                     WidthRequest="1"
+                     HorizontalOptions="Center"
+                     VerticalOptions="Fill"
+                     Color="{AppThemeBinding Light={StaticResource Pink}, Dark={StaticResource DeepRed}}" />
+
+            <Label Grid.Row="1" Grid.Column="2"
+                   Text="Played"
+                   Style="{StaticResource TagLabel}"
+                   VerticalOptions="Center"
+                   HorizontalOptions="Center"/>
+
+            <BoxView Grid.RowSpan="2"
+                     Grid.Column="3"
+                     WidthRequest="1"
+                     HorizontalOptions="Center"
+                     VerticalOptions="Fill"
+                     Color="{AppThemeBinding Light={StaticResource Pink}, Dark={StaticResource DeepRed}}" />
+
+            <Label Grid.Row="1" Grid.Column="4"
+                   Text="Won"
+                   Style="{StaticResource TagLabel}"
+                   VerticalOptions="Center"
+                   HorizontalOptions="Center"/>
+
+            <BoxView Grid.RowSpan="2"
+                     Grid.Column="5"
+                     WidthRequest="1"
+                     HorizontalOptions="Center"
+                     VerticalOptions="Fill"
+                     Color="{AppThemeBinding Light={StaticResource Pink}, Dark={StaticResource DeepRed}}" />
+
+            <Label Grid.Row="1" Grid.Column="6"
+                   Text="Lost"
+                   Style="{StaticResource TagLabel}"
+                   VerticalOptions="Center"
+                   HorizontalOptions="Center"/>
+        </Grid>
+
+        <CollectionView x:Name="PlayersCollection"
+                        Grid.ColumnSpan="2"
+                        Grid.Row="4" 
+                        SelectionMode="Single"
+                        ItemsSource="{Binding GameModelTemplate.Players}">
+            <CollectionView.ItemTemplate>
+                <DataTemplate x:DataType="models:PlayerModel">
+                    <SwipeView>
+                        <VisualStateManager.VisualStateGroups>
+                            <VisualStateGroup x:Name="CommonStates">
+                                <VisualState x:Name="Normal">
+                                </VisualState>
+                                <VisualState x:Name="Selected">
+                                    <VisualState.Setters>
+                                        <!-- pick your color or keep Transparent -->
+                                        <Setter TargetName="ItemRoot" Property="BackgroundColor"
+                                                    Value="{AppThemeBinding Light={StaticResource Pink}, Dark={StaticResource DeepRed}}" />
+                                    </VisualState.Setters>
+                                </VisualState>
+                            </VisualStateGroup>
+                        </VisualStateManager.VisualStateGroups>
+                        <SwipeView.RightItems>
+                            <SwipeItems Mode="Reveal"
+                                        SwipeBehaviorOnInvoked="Close"
+                                        >
+                                <SwipeItemView VerticalOptions="Center"
+                                               HorizontalOptions="End"
+                                               Command="{Binding Source={x:Reference thisPage}, Path=BindingContext.RemovePlayerCommand}"
+                                               CommandParameter="{Binding .}">
+                                    <Label VerticalOptions="Center" 
+                                           Text="Delete"
+                                           TextColor="{AppThemeBinding Light={StaticResource Pink}, Dark={StaticResource DeepRed}}"/>
+                                </SwipeItemView>
+         
+                            </SwipeItems>
+                        </SwipeView.RightItems>
+                        <Grid x:Name="ItemRoot"
+                              ColumnSpacing="0"
+                              HorizontalOptions="Fill"
+                              ColumnDefinitions="{Binding Source={x:Reference GridTemplate}, Path=ColumnDefinitions}"
+                              RowDefinitions="65,*">
+
+                            <Label Grid.Row="0" Grid.Column="0"
+                                   Text="{Binding PlayerName}"
+                                   Style="{StaticResource PlayerLabel}"
+                                   VerticalOptions="Center"
+                                   HorizontalOptions="Center"/>
+
+                            <BoxView Grid.RowSpan="2"
+                                     Grid.Column="1"
+                                     WidthRequest="1"
+                                     HorizontalOptions="Start"
+                                     VerticalOptions="Fill"
+                                     Color="{AppThemeBinding Light={StaticResource Pink}, Dark={StaticResource DeepRed}}" />
+
+                            <Label Grid.Row="0" Grid.Column="2"
+                                   Text="{Binding TotalGamesPlayed}"
+                                   Style="{StaticResource PlayerLabel}"
+                                   VerticalOptions="Center"
+                                   HorizontalOptions="Center"/>
+
+                            <BoxView Grid.RowSpan="2"
+                                     Grid.Column="3"
+                                     WidthRequest="1"
+                                     HorizontalOptions="Start"
+                                     VerticalOptions="Fill"
+                                     Color="{AppThemeBinding Light={StaticResource Pink}, Dark={StaticResource DeepRed}}" />
+
+                            <Label Grid.Row="0" Grid.Column="4"
+                                   Text="{Binding GamesWon}"
+                                   Style="{StaticResource PlayerLabel}"
+                                   VerticalOptions="Center"
+                                   HorizontalOptions="Center"/>
+
+                            <BoxView Grid.RowSpan="2"
+                                     Grid.Column="5"
+                                     WidthRequest="1"
+                                     HorizontalOptions="Start"
+                                     VerticalOptions="Fill"
+                                     Color="{AppThemeBinding Light={StaticResource Pink}, Dark={StaticResource DeepRed}}" />
+
+                            <Label Grid.Row="0" Grid.Column="6"
+                                   Text="{Binding GamesLost}"
+                                   Style="{StaticResource PlayerLabel}"
+                                   VerticalOptions="Center"
+                                   HorizontalOptions="Center"/>
+
+                            <Line Grid.Row="1" Grid.ColumnSpan="7"
+                                  X1="0"
+                                  X2="25000"
+                                  Y1="0"
+                                  Y2="0"
+                                  Stroke="{AppThemeBinding Light={StaticResource Pink}, Dark={StaticResource DeepRed}}"/>
+                        </Grid>
+                    </SwipeView>
+                </DataTemplate>
+            </CollectionView.ItemTemplate>
+        </CollectionView>
+
+        <Border Grid.Column="1"
+                Grid.Row="5" 
+                Style="{StaticResource TagButtonTransparentBorder}">
+            <Button Text="Start Game"
+                    WidthRequest="{Binding Source={x:Reference EntryPlayerName}, Path=WidthRequest}"
+                    HorizontalOptions="End"
+                    Command="{Binding StartGameCommand}"/>
+        </Border>
+    </Grid>
+</pages:BasePage>

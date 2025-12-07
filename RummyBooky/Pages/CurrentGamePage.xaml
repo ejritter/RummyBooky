@@ -1,0 +1,160 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<pages:BasePage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:pages="clr-namespace:RummyBooky.Pages"
+             xmlns:viewmodels="clr-namespace:RummyBooky.ViewModels"
+             xmlns:models="clr-namespace:RummyBooky.Models"
+             xmlns:views="clr-namespace:RummyBooky.Views"
+             x:Class="RummyBooky.Pages.CurrentGamePage"
+             x:DataType="viewmodels:CurrentGameViewModel"
+             x:TypeArguments="viewmodels:CurrentGameViewModel"
+             >
+    <VerticalStackLayout Spacing="8"
+                     HorizontalOptions="Center"
+                     VerticalOptions="Start">
+        
+            <Label Text="{Binding RoundText}"
+               VerticalOptions="Start"
+               HorizontalOptions="Center"
+               Style="{StaticResource TagHeader}"/>
+        
+        
+        <Label Text="{Binding ScoreLimit}"
+               VerticalOptions="Start"
+               HorizontalOptions="Center"
+               Style="{StaticResource TagHeader}"/>
+        <Button Text="Main Page" 
+                HorizontalOptions="End"
+                Command="{Binding GoToMainPageCommand}"
+                />
+
+        <Button Text="Quit Game"
+                HorizontalOptions="End"
+                Command="{Binding QuitGameCommand}"
+                />
+
+        <Grid ColumnSpacing="0"
+              ColumnDefinitions="*,95,115"
+              RowDefinitions="100,*"
+              >
+            <Label Grid.Row="0" Grid.Column="0" Text=""/>
+            <!--Just blank -->
+            <BoxView Grid.RowSpan="2"
+                     Grid.Column="0"
+                     WidthRequest="1"
+                     HorizontalOptions="End"
+                     VerticalOptions="Fill"
+                     Color="{AppThemeBinding Light={StaticResource Pink}, Dark={StaticResource DeepRed}}" />
+            <Label Grid.Row="0" Grid.Column="1"
+                Text="Total Score"
+                Style="{StaticResource TagLabel}"/>
+            <BoxView Grid.RowSpan="2"
+                     Grid.Column="1"
+                     WidthRequest="1"
+                     HorizontalOptions="End"
+                     VerticalOptions="Fill"
+                     Color="{AppThemeBinding Light={StaticResource Pink}, Dark={StaticResource DeepRed}}" />
+            <Label Grid.Row="0" Grid.Column="2"
+                Text="Round Score"
+                Style="{StaticResource TagLabel}"/>
+            <Line Grid.Row="1" Grid.ColumnSpan="3"
+                  X1="0"
+                  X2="25000"
+                  Y1="0"
+                  Y2="0"
+                  Stroke="{AppThemeBinding Light={StaticResource Pink}, Dark={StaticResource DeepRed}}"/>
+        </Grid>
+        <CollectionView ItemsSource="{Binding CurrentGame.Players}"
+                        SelectionMode="Single"
+                        SelectedItem="{Binding SelectedPlayer, Mode=TwoWay}"
+                        >
+            <CollectionView.ItemTemplate>
+                <DataTemplate x:DataType="models:PlayerModel">
+                    <Grid x:Name="ItemRoot"
+                          ColumnSpacing="0"
+                          ColumnDefinitions="*,2,95,2,115"
+                          RowDefinitions="65,*"
+                          >
+                        <VisualStateManager.VisualStateGroups>
+                            <VisualStateGroup x:Name="CommonStates">
+                                <VisualState x:Name="Normal" />
+                                <VisualState x:Name="Selected">
+                                    <VisualState.Setters>
+                                        <Setter Property="BackgroundColor"
+                                                Value="{AppThemeBinding Light={StaticResource Pink}, Dark={StaticResource DeepRed}}" />
+                                    </VisualState.Setters>
+                                </VisualState>
+                            </VisualStateGroup>
+                        </VisualStateManager.VisualStateGroups>
+                        <Label Grid.Row="0" Grid.Column="0"
+                               Text="{Binding PlayerName}"
+                               Style="{StaticResource PlayerLabel}"
+                               VerticalOptions="Center"
+                               HorizontalOptions="Center"
+                               />
+
+                        <BoxView Grid.RowSpan="1"
+                                 Grid.Column="3"
+                                 WidthRequest="1"
+                                 HorizontalOptions="Start"
+                                 VerticalOptions="Fill"
+                                 Color="{AppThemeBinding Light={StaticResource Pink}, Dark={StaticResource DeepRed}}" />
+                        
+                        <Label Grid.Row="0" Grid.Column="2"
+                               Text="{Binding PlayerScore}"
+                               Style="{StaticResource PlayerLabel}"
+                               VerticalOptions="Center"
+                               HorizontalOptions="Center"
+                               /><!-- Total Score -->
+                        <BoxView Grid.RowSpan="2"
+                                 Grid.Column="1"
+                                 WidthRequest="1"
+                                 HorizontalOptions="Start"
+                                 VerticalOptions="Fill"
+                                 Color="{AppThemeBinding Light={StaticResource Pink}, Dark={StaticResource DeepRed}}" />
+                        <Entry x:Name="PlayerScoreEntry"
+                               Grid.Row="0" Grid.Column="4"
+                               Text="{Binding PlayerScoreText, Mode=TwoWay}"
+                               MaximumWidthRequest="60"
+                               HorizontalOptions="Center"
+                               VerticalOptions="Start"
+                               FontSize="15"
+                               Keyboard="Numeric"/><!-- Round Score -->
+
+                        <Line Grid.Row="1" Grid.ColumnSpan="5"
+                              X1="0"
+                              X2="25000"
+                              Y1="0"
+                              Y2="0"
+                              Stroke="{AppThemeBinding Light={StaticResource Pink}, Dark={StaticResource DeepRed}}"/>
+               
+                    </Grid>
+                </DataTemplate>
+            </CollectionView.ItemTemplate>
+        </CollectionView>
+        <Button Text="Calculate Scores"
+                Command="{Binding CalculatePlayerScoresCommand}"
+                CommandParameter="{Binding Source={x:Reference PlayerScoreEntry}}"
+                />
+        <VerticalStackLayout>
+            <Label Style="{StaticResource PlayerLabel}"
+                       Text="{Binding GameStart, StringFormat='Game Started: {0:MM/dd/yy h:mm:ss tt}'}"
+                       HorizontalOptions="Center"
+                       />
+            <VerticalStackLayout IsVisible="{Binding DisplayPlayersHighestLowestHands}" HorizontalOptions="Center">
+                <Label Style="{StaticResource PlayerLabel}"
+                       Text="{Binding CurrentRound.CurrentHighestScoredHandValue, StringFormat='Highest Hand Played: {0}'}"
+                       HorizontalOptions="Center" />
+                <Label Style="{StaticResource PlayerLabel}"
+                       Text="{Binding CurrentRound.PlayerHighestScoringHand.PlayerName, StringFormat='Played by: {0}'}"
+                       HorizontalOptions="Center" />
+                <Label Style="{StaticResource PlayerLabel}"
+                       Text="{Binding CurrentRound.CurrentLowestScoredHandValue, StringFormat='Lowest Hand Played: {0}'}"
+                       HorizontalOptions="Center" />
+                <Label Style="{StaticResource PlayerLabel}"
+                       Text="{Binding CurrentRound.PlayerLowestScoringHand.PlayerName, StringFormat='Played by: {0}'}"
+                       HorizontalOptions="Center" />
+            </VerticalStackLayout>
+        </VerticalStackLayout>
+    </VerticalStackLayout>
+</pages:BasePage>

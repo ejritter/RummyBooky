@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<pages:BasePage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+                xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+                xmlns:toolkit="http://schemas.microsoft.com/dotnet/2022/maui/toolkit"
+                xmlns:pages="clr-namespace:RummyBooky.Pages"
+                xmlns:viewmodels="clr-namespace:RummyBooky.ViewModels"
+                xmlns:models="clr-namespace:RummyBooky.Models"
+                xmlns:views="clr-namespace:RummyBooky.Views"
+                x:Class="RummyBooky.Pages.MainPage"
+                x:DataType="viewmodels:MainPageViewModel"
+                x:TypeArguments="viewmodels:MainPageViewModel"     
+          >
+    <VerticalStackLayout Spacing="8"
+                         HorizontalOptions="Center"
+                         VerticalOptions="Start">
+        <Button Text="New Game"
+                Command="{Binding NewGameCommand}"
+                />
+        <Button Text="Leader Boards" />
+        <Button Text="Resume Game"
+                Command="{Binding ResumeGameCommand}"
+                />
+        
+        <CollectionView x:Name="CurrentGames" 
+                        EmptyView="No games active..."
+                        ItemsSource="{Binding ActiveGames}"
+                        SelectedItem="{Binding SelectedGame, Mode=TwoWay}"
+                        SelectionMode="Single">
+            <CollectionView.ItemTemplate>
+                <DataTemplate x:DataType="models:CurrentGameModel">
+                    <VerticalStackLayout Spacing="6" Padding="8">
+                        <VisualStateManager.VisualStateGroups>
+                            <VisualStateGroup x:Name="CommonStates">
+                                <VisualState x:Name="Normal" />
+                                <VisualState x:Name="Selected">
+                                    <VisualState.Setters>
+                                        <Setter Property="BackgroundColor"
+                                                Value="{AppThemeBinding Light={StaticResource Pink}, Dark={StaticResource DeepRed}}" />
+                                    </VisualState.Setters>
+                                </VisualState>
+                            </VisualStateGroup>
+                        </VisualStateManager.VisualStateGroups>
+                        <!-- Game meta -->
+                        <HorizontalStackLayout Spacing="16">
+                            <Label Text="{Binding GameStart, StringFormat='Started: {0:MMM dd, yyyy h:mm tt}'}" />
+                            <Label Text="{Binding ScoreLimit, StringFormat='Score Limit: {0}'}" />
+                        </HorizontalStackLayout>
+
+                        <!-- Players for this game -->
+                        <HorizontalStackLayout
+                            BindableLayout.ItemsSource="{Binding Players}"
+                            Spacing="12">
+                            <BindableLayout.ItemTemplate>
+                                <DataTemplate x:DataType="models:PlayerModel">
+                                    <Label Text="{Binding PlayerName}" />
+                                </DataTemplate>
+                            </BindableLayout.ItemTemplate>
+                        </HorizontalStackLayout>
+                    </VerticalStackLayout>
+                </DataTemplate>
+            </CollectionView.ItemTemplate>
+            
+        </CollectionView>
+    </VerticalStackLayout>
+</pages:BasePage>
