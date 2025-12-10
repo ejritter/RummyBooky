@@ -65,8 +65,7 @@
                   Stroke="{AppThemeBinding Light={StaticResource Pink}, Dark={StaticResource DeepRed}}"/>
         </Grid>
         <CollectionView ItemsSource="{Binding CurrentGame.Players}"
-                        SelectionMode="Single"
-                        SelectedItem="{Binding SelectedPlayer, Mode=TwoWay}"
+                        SelectionMode="None"
                         >
             <CollectionView.ItemTemplate>
                 <DataTemplate x:DataType="models:PlayerModel">
@@ -86,6 +85,12 @@
                                 </VisualState>
                             </VisualStateGroup>
                         </VisualStateManager.VisualStateGroups>
+                        <Image Grid.Row="0" Grid.Column="0"
+                               VerticalOptions="Center"
+                               HorizontalOptions="Start"
+                               IsVisible="{Binding IsDealer}"
+                               Style="{StaticResource DealerImage}"
+                               />
                         <Label Grid.Row="0" Grid.Column="0"
                                Text="{Binding PlayerName}"
                                Style="{StaticResource PlayerLabel}"

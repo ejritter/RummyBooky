@@ -161,11 +161,43 @@
          
                             </SwipeItems>
                         </SwipeView.RightItems>
+                        <SwipeView.LeftItems>
+                            <SwipeItems Mode="Reveal"
+                                        SwipeBehaviorOnInvoked="Close"
+                                        >
+                                <SwipeItemView VerticalOptions="Center"
+                                               HorizontalOptions="Start"
+                                               Command="{Binding Source={x:Reference thisPage}, Path=BindingContext.SetPlayerAsDealerCommand}"
+                                               CommandParameter="{Binding .}">
+                                    <Label VerticalOptions="Center" 
+                                           Text="Dealer"
+                                           TextColor="{AppThemeBinding Light={StaticResource Pink}, Dark={StaticResource DeepRed}}"/>
+                                </SwipeItemView>
+                            </SwipeItems>
+                        </SwipeView.LeftItems>
                         <Grid x:Name="ItemRoot"
                               ColumnSpacing="0"
                               HorizontalOptions="Fill"
                               ColumnDefinitions="{Binding Source={x:Reference GridTemplate}, Path=ColumnDefinitions}"
                               RowDefinitions="65,*">
+                            <!-- For Desktop users, right click context menu options to delete or set dealer-->
+                            <FlyoutBase.ContextFlyout>
+                                <MenuFlyout>
+                                    <MenuFlyoutItem Text="Delete"
+                                                    Command="{Binding Source={x:Reference thisPage}, Path=BindingContext.RemovePlayerCommand}"
+                                                    CommandParameter="{Binding .}"/>
+                                    <MenuFlyoutItem Text="Dealer"
+                                                    Command="{Binding Source={x:Reference thisPage}, Path=BindingContext.SetPlayerAsDealerCommand}"
+                                                    CommandParameter="{Binding .}"/>
+                                </MenuFlyout>
+                            </FlyoutBase.ContextFlyout>
+
+                            <Image Grid.Row="0" Grid.Column="0"
+                                   VerticalOptions="Center"
+                                   HorizontalOptions="Start"
+                                   IsVisible="{Binding IsDealer}"
+                                   Style="{StaticResource DealerImage}"
+                                   />
 
                             <Label Grid.Row="0" Grid.Column="0"
                                    Text="{Binding PlayerName}"

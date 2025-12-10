@@ -141,4 +141,24 @@ public partial class NewGameViewModel : BaseViewModel
         results = true;
         return results;
     }
+
+    [RelayCommand]
+    private async Task<bool> SetPlayerAsDealer(PlayerModel playerModel)
+    {
+        var results = false;
+        if (MainThread.IsMainThread)
+        {
+            await _gameService.SetGamesDealer(GameModelTemplate, playerModel);
+            results = true;
+        }
+        else
+        {
+            await MainThread.InvokeOnMainThreadAsync(async () =>
+            {
+                await _gameService.SetGamesDealer(GameModelTemplate, playerModel);
+                results = true;
+            });
+        }
+        return results;
+    }
 }

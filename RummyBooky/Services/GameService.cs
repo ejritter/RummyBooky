@@ -127,7 +127,7 @@ public class GameService
 
     public async Task<(bool Results, List<PlayerModel> Winners, GameStatus GameStatus)> CheckForWinnersAsync(CurrentGameModel currentGame)
     {
-        var results = (false, new List<PlayerModel>(),GameStatus.Unknown);
+        var results = (false, new List<PlayerModel>(), GameStatus.Unknown);
         var winners = currentGame
             .Players
             .Where(player => player.PlayerScore >= currentGame.ScoreLimit)
@@ -139,7 +139,7 @@ public class GameService
 
         var highestScore = winners.Max(player => player.PlayerScore);
         winners = winners.Where(player => player.PlayerScore == highestScore).ToList();
-        
+
         if (winners.Count > 1)//we have a draw
             results = (true, winners, GameStatus.Draw);
         else // winner
@@ -171,7 +171,7 @@ public class GameService
         var gameJson = JsonSerializer.Serialize(game);
         await File.WriteAllTextAsync(filePath, gameJson);
         results = true;
-        return true;
+        return results;
     }
 
     public async Task<List<GameModel>> LoadActiveGamesAsync()
@@ -245,5 +245,71 @@ public class GameService
         roundModel.PlayersScoredHandThisRound.Add(player);
         results = true;
         return results;
+    }
+
+    public async Task<bool> SetGamesDealer(GameModel currentGame, PlayerModel playerModel)
+    {
+        var results = false;
+        foreach (var player in currentGame.Players)
+        {
+            if (player.ID == playerModel.ID)
+            {
+
+                //if current player is the dealer already, then reset all players to false.
+                if (player.IsDealer == true)
+                    player.IsDealer = false;
+                else
+                    player.IsDealer = true;
+                    results = true;
+            }
+            else
+            {
+                player.IsDealer = false;
+            }
+        }
+        return results;
+    }
+
+    /// <summary>
+    /// This is used if no dealer is set by the player
+    /// </summary>
+    /// <param name="currentGame">The Current Game Model that will get assigned a random dealer.</param>
+    /// <returns></returns>
+    public async Task<bool> SetRandomDealerForCurrentGame(GameModel currentGame)
+    {
+        var results = false;
+        var playerCount = currentGame.Players.Count;
+        if (playerCount == 0) return results;
+        else
+        {
+            var randomIndex = new Random().Next(0, playerCount);
+            var chosenPlayer = currentGame.Players[randomIndex];
+            chosenPlayer.IsDealer = true;
+            results = true;
+            return results;
+        }
+    }
+
+    /// <summary>
+    /// This is used for when a new round starts. Do not invoke on Round 1.
+    /// </summary>
+    /// <param name="currentGame"></param>
+    /// <returns></returns>
+    public async Task<bool> SetNextDealerForNewRound(GameModel currentGame)
+    {
+        var results = false;
+        var currentDealerIndex = currentGame
+            .Players
+            .IndexOf(currentGame
+                        .Players
+                        .First(p => p.IsDealer));
+
+        if (currentDealerIndex == -1) return results;
+
+        var nextDealerIndex = (currentDealerIndex + 1) % currentGame.Players.Count;
+        currentGame.Players[currentDealerIndex].IsDealer = false; //no longer the dealer.
+        currentGame.Players[nextDealerIndex].IsDealer = true; // next dealer.
+        results = true;
+        return true;
     }
 }

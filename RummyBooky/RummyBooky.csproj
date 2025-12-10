@@ -28,8 +28,12 @@
 		<ApplicationDisplayVersion>1.0</ApplicationDisplayVersion>
 		<ApplicationVersion>1</ApplicationVersion>
 
+		<!-- Android Package Format remove to make aab and upload to google playstore.-->
+		<AndroidPackageFormat>apk</AndroidPackageFormat>
+		
 		<!-- To develop, package, and publish an app to the Microsoft Store, see: https://aka.ms/MauiTemplateUnpackaged -->
 		<WindowsPackageType>None</WindowsPackageType>
+		
 
 
 
@@ -62,7 +66,7 @@
 		<PackageReference Include="CommunityToolkit.Maui" Version="13.0.0" />
 		<PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.0" />
 		<PackageReference Include="Microsoft.Maui.Controls" Version="10.0.11" />
-		<PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="10.0.0" />
+		<PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="10.0.1" />
 		<PackageReference Include="Plugin.Maui.Audio" Version="4.0.0" />
 		<PackageReference Include="Serilog" Version="4.3.0" />
 		<PackageReference Include="Serilog.Extensions.Hosting" Version="10.0.0" />
@@ -89,6 +93,9 @@
 	<PropertyGroup>
 		<DefineConstants>$(DefineConstants);MauiAllowImplicitXmlnsDeclaration</DefineConstants>
 		<EnablePreviewFeatures>true</EnablePreviewFeatures>
+		
+		<AndroidSigningKeyStore>C:\Users\roija\AppData\Local\Xamarin\Mono for Android\Keystore\RummyBooky\RummyBooky.keystore</AndroidSigningKeyStore>
 	</PropertyGroup>
+
 
 </Project>

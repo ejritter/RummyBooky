@@ -154,16 +154,24 @@ public partial class CurrentGameViewModel(IPopupService popupService, GameServic
                 // No winner: proceed to next round and save
                 if (MainThread.IsMainThread)
                 {
-                    CurrentGame = CurrentGame.CreateNextRoundTemplate();
-                    CurrentRound = CurrentGame.Round.Last();
+                    //CurrentGame = CurrentGame.CreateNextRoundTemplate();
+                    //CurrentRound = CurrentGame.Round.Last();
+                    CurrentRound = CurrentGame
+                        .CreateNextRoundTemplate()
+                        .Round
+                        .Last();
                     await _gameService.SaveGameAsync(CurrentGame);
                 }
                 else
                 {
                     await MainThread.InvokeOnMainThreadAsync(async () =>
                     {
-                        CurrentGame = CurrentGame.CreateNextRoundTemplate();
-                        CurrentRound = CurrentGame.Round.Last();
+                        //CurrentGame = CurrentGame.CreateNextRoundTemplate();
+                        //CurrentRound = CurrentGame.Round.Last();
+                        CurrentRound = CurrentGame
+                            .CreateNextRoundTemplate()
+                            .Round
+                            .Last();
                         await _gameService.SaveGameAsync(CurrentGame);
                     });
                 }
@@ -233,19 +241,39 @@ public partial class CurrentGameViewModel(IPopupService popupService, GameServic
                 player.PropertyChanged += Player_PropertyChanged;
             }
 
-            CurrentRound = value.Round.LastOrDefault();
+            CurrentRound = value.Round.Last();
             RoundText = $"Round {value.Round.Count}";
             ScoreLimit = value.ScoreLimit;
             GameStart = value.GameStart;
-            SubscribeRoundObservers(CurrentRound);
-
-            // Initial visibility based on round state
-            UpdateHighestLowestVisibility();
-
-            ReorderPlayersForDisplay();
+            _ = CheckDealerStatus(value);
         }
     }
-
+    private async Task<bool> CheckDealerStatus(CurrentGameModel value)
+    {
+        var results = false;
+        var roundCount = value.Round.Count;
+        var dealerFound = value.Players.FirstOrDefault(p => p.IsDealer);
+        //if no dealer set, and it is round 1, call set random dealer.
+        if(dealerFound is null && roundCount == 1)
+        {
+            return results = await _gameService.SetRandomDealerForCurrentGame(value);
+        }
+        //if dealer is set, and it is round 1, do nothing
+        if(dealerFound is not null && roundCount == 1)
+        {
+            return results = true;
+        }
+        //if dealer is set and it is round 2+, call set next dealer.
+        if (dealerFound is not null && roundCount > 1)
+        {
+            return results = await _gameService.SetNextDealerForNewRound(value);
+        }
+        //should not hit this, but default incase. 
+        else
+        {
+            return results = await _gameService.SetRandomDealerForCurrentGame(value);
+        }
+    }
     partial void OnCurrentRoundChanged(RoundModel value)
     {
         if (value is not null)
@@ -259,9 +287,8 @@ public partial class CurrentGameViewModel(IPopupService popupService, GameServic
             RoundText = $"Round {CurrentGame.Round.Count}";
 
             SubscribeRoundObservers(value);
-
+            _ = CheckDealerStatus(CurrentGame);
             UpdateHighestLowestVisibility();
-
             ReorderPlayersForDisplay();
         }
     }

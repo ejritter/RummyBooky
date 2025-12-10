@@ -30,4 +30,7 @@ public partial class PlayerModel : BaseModel
 
     [ObservableProperty]
     public partial int LowestScoredHand { get; set; } = 0;
+
+    [ObservableProperty]
+    public partial bool IsDealer { get; set; } = false;
 }
