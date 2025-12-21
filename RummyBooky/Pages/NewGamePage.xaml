@@ -2,7 +2,7 @@
 <pages:BasePage x:Name="thisPage"
                 xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
                 xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
-                xmlns:android="clr-namespace:Microsoft.Maui.Controls.PlatformConfiguration.AndroidSpecific;assembly=Microsoft.Maui.Controls"
+                xmlns:toolkit="http://schemas.microsoft.com/dotnet/2022/maui/toolkit"
                 xmlns:pages="clr-namespace:RummyBooky.Pages"
                 xmlns:viewmodels="clr-namespace:RummyBooky.ViewModels"
                 xmlns:models="clr-namespace:RummyBooky.Models"
@@ -16,7 +16,7 @@
           VerticalOptions="Start"
           ColumnDefinitions="*,*"
           ColumnSpacing="25"
-          RowDefinitions="100,100,90,50,*,90">
+          RowDefinitions="100,100,90,Auto,*,90">
 
         <Label Grid.Column="0"
                Grid.Row="0"
@@ -35,12 +35,14 @@
                    Keyboard="Numeric"/>
         </Border>
 
-        <Label Grid.Column="0" 
-               Grid.Row="1"
-               Style="{StaticResource TagLabelNoBackground}"
-               Text="Player Name" 
-               HorizontalOptions="Start"
-               VerticalOptions="Center"/>
+       <Label Grid.Column="0"
+              Grid.Row="1"
+              Style="{StaticResource TagLabelNoBackground}"
+              Text="Player Name"
+              HorizontalOptions="Start"
+              VerticalOptions="Center" />
+            
+
         <Border Grid.Column="1"
                 Grid.Row="1"
                 HorizontalOptions="End"
@@ -52,7 +54,16 @@
                    ReturnCommand="{Binding AddPlayerCommand}"
                    ReturnCommandParameter="{Binding Source={x:Reference EntryPlayerName}}"
                    Text="{Binding PlayerNameText, Mode=TwoWay}"
-                   Style="{StaticResource TagEntry}"/>
+                   Style="{StaticResource TagEntry}">
+                <Entry.Behaviors>
+                    <toolkit:UserStoppedTypingBehavior
+                        BindingContext="{Binding Path=BindingContext, Source={x:Reference EntryPlayerName}, x:DataType=Entry}"
+                        StoppedTypingTimeThreshold="3000"
+                        ShouldDismissKeyboardAutomatically="True"
+                        Command="{Binding UserStoppedTypingCommand}"
+                        /> 
+                </Entry.Behaviors>
+            </Entry>
         </Border>
 
         <Border Grid.Column="1" 
@@ -65,6 +76,70 @@
                     CommandParameter="{Binding Source={x:Reference EntryPlayerName}}"/>
         </Border>
 
+        <Border Grid.Row="3"
+                Grid.ColumnSpan="2"
+                HorizontalOptions="Start"
+                VerticalOptions="Start"
+                Style="{StaticResource TagEntryBorder}"
+                IsVisible="{Binding ShowPlayerSuggestions}"
+                >
+            <CollectionView 
+                            x:Name="SuggestedPlayersCollection"
+                            ItemsSource="{Binding FilteredPlayerModelsByName}"
+                            SelectionMode="Single"
+                            SelectedItem="{Binding SelectedSuggestedPlayerModel}"
+                            >
+                <CollectionView.ItemTemplate>
+                    <DataTemplate x:DataType="models:PlayerModel">
+                        <HorizontalStackLayout Spacing="10">
+                            <VisualStateManager.VisualStateGroups>
+                                <VisualStateGroup x:Name="CommonStates">
+                                    <VisualState x:Name="Normal">
+                                    </VisualState>
+                                    <VisualState x:Name="Selected">
+                                        <VisualState.Setters>
+                                            <!-- pick your color or keep Transparent -->
+                                            <Setter Property="VisualElement.BackgroundColor"
+                                                    Value="{AppThemeBinding Light={x:StaticResource Pink}, Dark={x:StaticResource DeepRed}}" />
+                                        </VisualState.Setters>
+                                    </VisualState>
+                                </VisualStateGroup>
+                            </VisualStateManager.VisualStateGroups>
+                            <HorizontalStackLayout.GestureRecognizers>
+                                <TapGestureRecognizer NumberOfTapsRequired="2"
+                                                      Command="{Binding Source={RelativeSource AncestorType={x:Type pages:NewGamePage}}, 
+                                                                Path=BindingContext.AddSuggestedPlayerCommand}"/>
+                            </HorizontalStackLayout.GestureRecognizers>
+                            <Label Style="{StaticResource PlayerLabel}" 
+                                   Text="{Binding PlayerName}"
+                                   HorizontalOptions="Start"
+                                   Padding="8,4"
+                                   />
+                            <Label Style="{StaticResource PlayerLabel}" 
+                                   Text="{Binding TotalGamesPlayed, StringFormat='Total Games:  {0}'}"
+                                   HorizontalOptions="End"
+                                   Padding="8,4"
+                                   />
+                            <Label Style="{StaticResource PlayerLabel}" 
+                                   Text="{Binding GamesWon, StringFormat='Won:  {0}'}" 
+                                   HorizontalOptions="End"
+                                   Padding="8,4"
+                                   />
+                            <Label Style="{StaticResource PlayerLabel}" 
+                                   Text="{Binding GamesLost, StringFormat='Lost:  {0}'}" 
+                                   HorizontalOptions="End"
+                                   Padding="8,4"
+                                   />
+                            <Label Style="{StaticResource PlayerLabel}" 
+                                   Text="{Binding PlayerCreatedDate, StringFormat='Created:  {0}'}" 
+                                   HorizontalOptions="End"
+                                   Padding="8,4"
+                                   />
+                        </HorizontalStackLayout>
+                    </DataTemplate>
+                </CollectionView.ItemTemplate>
+            </CollectionView>
+        </Border>
         <!-- Header: small banner + column captions; matches item template columns exactly -->
         <Grid x:Name="GridTemplate"
               IsVisible="{Binding ShowGridTemplate}"
@@ -79,7 +154,7 @@
                      HorizontalOptions="Fill"
                      VerticalOptions="Fill"
                      Color="{AppThemeBinding Light={StaticResource Pink}, Dark={StaticResource DeepRed}}" />
-            
+
             <Label Grid.Row="1" Grid.Column="0"
                    Text=""
                    VerticalOptions="Center"
@@ -140,8 +215,8 @@
                                 <VisualState x:Name="Selected">
                                     <VisualState.Setters>
                                         <!-- pick your color or keep Transparent -->
-                                        <Setter TargetName="ItemRoot" Property="BackgroundColor"
-                                                    Value="{AppThemeBinding Light={StaticResource Pink}, Dark={StaticResource DeepRed}}" />
+                                        <Setter TargetName="ItemRoot" Property="VisualElement.BackgroundColor"
+                                                    Value="{AppThemeBinding Light={x:StaticResource Pink}, Dark={x:StaticResource DeepRed}}" />
                                     </VisualState.Setters>
                                 </VisualState>
                             </VisualStateGroup>
@@ -178,6 +253,7 @@
                         <Grid x:Name="ItemRoot"
                               ColumnSpacing="0"
                               HorizontalOptions="Fill"
+                              IsVisible="{Binding Source={x:Reference GridTemplate}, Path=IsVisible}"
                               ColumnDefinitions="{Binding Source={x:Reference GridTemplate}, Path=ColumnDefinitions}"
                               RowDefinitions="65,*">
                             <!-- For Desktop users, right click context menu options to delete or set dealer-->
@@ -264,5 +340,14 @@
                     HorizontalOptions="End"
                     Command="{Binding StartGameCommand}"/>
         </Border>
+        <!-- enable for debugging -->
+    <CollectionView IsVisible="false" IsEnabled="false" BackgroundColor="Red" EmptyView="No players" ItemsSource="{Binding AllPlayerModels}" Grid.Row="6">
+            <CollectionView.ItemTemplate>
+                <DataTemplate x:DataType="models:PlayerModel">
+                    <Label Text="{Binding PlayerName}"/>
+                </DataTemplate>
+            </CollectionView.ItemTemplate>
+        </CollectionView>
     </Grid>
+
 </pages:BasePage>

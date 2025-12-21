@@ -4,10 +4,8 @@ public partial class MainPageViewModel(IPopupService popupService, GameService g
     : BaseViewModel(popupService, gameService)
 {
 
-
-
-    public ObservableCollection<GameModel> ActiveGames { get; set; } = new();
-    public ObservableCollection<GameModel> PlayedGames { get; set; } = new();
+    public ObservableCollection<GameModel> ActiveGames { get; set; } = [];
+    public ObservableCollection<GameModel> PlayedGames { get; set; } = [];
 
     private bool CanResumeGame => SelectedGame is null ? false : true;
 
@@ -19,25 +17,31 @@ public partial class MainPageViewModel(IPopupService popupService, GameService g
         ResumeGameCommand.NotifyCanExecuteChanged();
     }
 
-    [RelayCommand]
-    private async Task NewGame()
-    {
-        await Shell.Current.GoToAsync(nameof(NewGamePage));
-    }
 
     [RelayCommand]
     private async Task Appearing()
     {
-        await LoadActiveGames();
-        await LoadPlayedGames();
+        await LoadActiveGamesAsync();
+        await LoadPlayedGamesAsync();
+        await LoadAllPlayersAsync();
     }
 
-    private async Task<bool> LoadActiveGames()
+    private async Task<bool> LoadAllPlayersAsync()
+    {
+        var results = false;
+        results = await _gameService.LoadAllPlayersAsync();
+        return results;
+    }
+
+    private async Task<bool> LoadActiveGamesAsync()
     {
         var results = false;
         var games = await _gameService.LoadActiveGamesAsync();
+        var gamesSorted = games
+            .OrderBy(g => g.GameStart)
+            .ToList<CurrentGameModel>();
         ActiveGames.Clear();
-        foreach (var game in games)
+        foreach (var game in gamesSorted)
         {
             ActiveGames.Add(game);
         }
@@ -45,7 +49,7 @@ public partial class MainPageViewModel(IPopupService popupService, GameService g
         return results;
     }
 
-    private async Task<bool> LoadPlayedGames()
+    private async Task<bool> LoadPlayedGamesAsync()
     {
         var results = false;
         var playedGames = await _gameService.LoadPlayedGamesAsync();
@@ -58,6 +62,16 @@ public partial class MainPageViewModel(IPopupService popupService, GameService g
         return results;
     }
 
+    [RelayCommand]
+    private async Task NewGame()
+    {
+        //var playersArray = await _gameService.GetAllPlayerModelsArray();
+        //await Shell.Current.GoToAsync(nameof(NewGamePage), new Dictionary<string, object>
+        //{
+        //    ["AllPlayerModels"] = playersArray
+        //});
+        await Shell.Current.GoToAsync(nameof(NewGamePage));
+    }
 
     [RelayCommand(CanExecute = nameof(CanResumeGame))]
     private async Task<bool> ResumeGame()

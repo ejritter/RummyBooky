@@ -5,6 +5,8 @@ public partial class PlayerModel : BaseModel
     [ObservableProperty]
     public partial string PlayerName { get; set; } = string.Empty;
 
+    public DateTime PlayerCreatedDate { get; init; }  = DateTime.Now;
+
     [ObservableProperty]
     public partial string PlayerScoreText { get; set; } = string.Empty;
 
@@ -24,6 +26,12 @@ public partial class PlayerModel : BaseModel
 
     [ObservableProperty]
     public partial double GamesLost { get; set; } = 0;
+
+    [ObservableProperty]
+    public partial double GamesForfeit { get; set; } = 0;
+
+    [ObservableProperty]
+    public partial double GameDraws { get; set; } = 0;
 
     [ObservableProperty]
     public partial int HighestScoredHand { get; set; } = 0;

@@ -1,23 +1,84 @@
-﻿using CommunityToolkit.Maui.Core.Platform;
+﻿namespace RummyBooky.ViewModels;
 
-namespace RummyBooky.ViewModels;
-
-public partial class NewGameViewModel : BaseViewModel
+public partial class NewGameViewModel(IPopupService popupService, GameService gameService)
+        : BaseViewModel(popupService, gameService)
 {
-    public NewGameViewModel(IPopupService popupService, GameService gameService)
-        : base(popupService, gameService)
+
+    private int _tapCount = 0;
+
+    //[ObservableProperty]
+    //public partial PlayerModel? HighlightedSuggestedPlayer { get; set; } = null;
+    [RelayCommand]
+    private async Task Appearing()
     {
         GameModelTemplate = _gameService.GetNewGameModel();
+        AllPlayerModels = await _gameService.GetAllPlayerModelsArray();
         GameModelTemplate.Players.CollectionChanged += Players_CollectionChanged;
+        FilteredPlayerModelsByName.CollectionChanged += FilteredPlayerModelsByName_CollectionChanged;
     }
 
+    [RelayCommand]
+    private async Task Disappearing()
+    {
+        GameModelTemplate.Players.CollectionChanged -= Players_CollectionChanged;
+        FilteredPlayerModelsByName.CollectionChanged -= FilteredPlayerModelsByName_CollectionChanged;
+    }
+
+    [ObservableProperty] 
+    public partial PlayerModel[] AllPlayerModels { get; set; } = [];
+
+    public ObservableCollection<PlayerModel> FilteredPlayerModelsByName { get; set; } = [];
+
+
+    [ObservableProperty]
+    public partial PlayerModel? SelectedSuggestedPlayerModel { get; set; } = null;
+    
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(ShowGridTemplate))]
+    public partial bool ShowPlayerSuggestions { get; set; } = false;
+
+    partial void OnShowPlayerSuggestionsChanged(bool oldValue, bool newValue)
+    {
+        if (newValue == true)
+            ShowGridTemplate = false;
+        else
+            ShowGridTemplate = GameModelTemplate.Players.Count > 0;
+    }
     private void Players_CollectionChanged(object? sender, NotifyCollectionChangedEventArgs eventArgs)
     {
-        ShowGridTemplate = GameModelTemplate.Players.Count > 0;
+        ShowGridTemplate = GameModelTemplate.Players.Count > 0 && 
+            ShowPlayerSuggestions == false;
         StartGameCommand.NotifyCanExecuteChanged();
         AddPlayerCommand.NotifyCanExecuteChanged();
     }
 
+    [RelayCommand]
+    private async Task<bool> UserStoppedTyping()
+    {
+        var results = false;
+        if (GameModelTemplate.Players.Count >= IntConstants.MaximumPlayerCount)
+            return results;//can't add players at this point. Don't bother suggesting.
+        FilteredPlayerModelsByName.Clear();
+        //HighlightedSuggestedPlayer = null;
+        if (string.IsNullOrWhiteSpace(PlayerNameText))
+            return results;
+        var matches = AllPlayerModels
+                        //Grab by name
+            .Where(p => p.PlayerName.StartsWith(PlayerNameText, StringComparison.OrdinalIgnoreCase) &&
+                        //now whether or not that model is already in the Players collection
+                        //if not, return it.
+                        GameModelTemplate.Players.Any(gp => gp.ID == p.ID) == false)
+            
+            .ToList<PlayerModel>();
+        foreach (var player in matches)
+            FilteredPlayerModelsByName.Add(player);
+        return results;
+    }
+
+    private void FilteredPlayerModelsByName_CollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
+    {
+        ShowPlayerSuggestions = FilteredPlayerModelsByName.Count > 0;
+    }
 
     public string ScoreBoundaries { get; init; } = $"{IntConstants.MinimumScoreLimit} - {IntConstants.MaximumScoreLimit}";
 
@@ -63,6 +124,7 @@ public partial class NewGameViewModel : BaseViewModel
     }
 
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(ShowPlayerSuggestions))]
     public partial bool? ShowGridTemplate { get; set; } = false;
 
     [RelayCommand(CanExecute = nameof(CanAddPlayer))]
@@ -70,6 +132,8 @@ public partial class NewGameViewModel : BaseViewModel
     {
         var results = await _gameService.AddPlayerToNewGameAsync(GameModelTemplate, PlayerNameText);
         PlayerNameText = string.Empty;
+        FilteredPlayerModelsByName.Clear();
+        //HighlightedSuggestedPlayer = null;
         CanStartGame();
         if (GameModelTemplate.Players.Count == IntConstants.MaximumPlayerCount)
         {
@@ -79,10 +143,28 @@ public partial class NewGameViewModel : BaseViewModel
         return results;
     }
 
+    [RelayCommand]
+    private async Task<bool> AddSuggestedPlayer()
+    {
+        var results = await _gameService.AddExistingPlayerModelToNewGameAsync(GameModelTemplate, SelectedSuggestedPlayerModel);
+        PlayerNameText = string.Empty;
+        FilteredPlayerModelsByName.Clear();
+        //HighlightedSuggestedPlayer = null;
+        CanStartGame();
+        if (GameModelTemplate.Players.Count == IntConstants.MaximumPlayerCount)
+        {
+           await HideKeyboard();
+        }
+        return results;
+    }
+
+
+
     [RelayCommand(CanExecute = nameof(CanStartGame))]
     private async Task StartGame()
     {
         await HideKeyboard();
+        await _gameService.CreateFreshPlayerTemplatesForCurrentGame(GameModelTemplate);
         var currentGame = GameModelTemplate.ConvertToCurrentGame();
         //currentGame.Round.Add(currentGame);
         await _gameService.SetCurrentGameScoreLimitAsync(currentGame, int.Parse(ScoreLimitText));
@@ -128,6 +210,8 @@ public partial class NewGameViewModel : BaseViewModel
         ShowGridTemplate = false;
         GameModelTemplate = null;
         ScoreLimitText = string.Empty;
+        FilteredPlayerModelsByName.Clear();
+        //HighlightedSuggestedPlayer = null;
         GameModelTemplate = _gameService.GetNewGameModel();
     }
 
@@ -148,17 +232,19 @@ public partial class NewGameViewModel : BaseViewModel
         var results = false;
         if (MainThread.IsMainThread)
         {
-            await _gameService.SetGamesDealer(GameModelTemplate, playerModel);
+            await _gameService.SetGamesDealerAsync(GameModelTemplate, playerModel);
             results = true;
         }
         else
         {
             await MainThread.InvokeOnMainThreadAsync(async () =>
             {
-                await _gameService.SetGamesDealer(GameModelTemplate, playerModel);
+                await _gameService.SetGamesDealerAsync(GameModelTemplate, playerModel);
                 results = true;
             });
         }
         return results;
     }
+
+
 }

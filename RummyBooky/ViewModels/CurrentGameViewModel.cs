@@ -1,4 +1,4 @@
-﻿using CommunityToolkit.Maui.Core.Platform;
+﻿
 
 namespace RummyBooky.ViewModels;
 
@@ -7,6 +7,7 @@ public partial class CurrentGameViewModel(IPopupService popupService, GameServic
     : BaseViewModel(popupService, gameService)
 {
     private RoundModel? _lastRoundSubscribed;
+
 
     [ObservableProperty]
     public partial bool DisplayPlayersHighestLowestHands { get; set; } = false;
@@ -65,7 +66,7 @@ public partial class CurrentGameViewModel(IPopupService popupService, GameServic
             await Task.WhenAll(CurrentGame.Players.Select(player => _gameService.SetRoundPlayersScoredHandsAsync(player, CurrentRound)));
 
             // Clear input scores (mutation)
-            await Task.WhenAll(CurrentGame.Players.Select(player => _gameService.SetPlayersScoreTextToEmpty(player)));
+            await Task.WhenAll(CurrentGame.Players.Select(player => _gameService.SetPlayersScoreTextToEmptyAsync(player)));
 
             // Winners popup
             var winnerResults = await _gameService.CheckForWinnersAsync(CurrentGame);
@@ -128,6 +129,9 @@ public partial class CurrentGameViewModel(IPopupService popupService, GameServic
                     var playedGame = CurrentGame
                        .ConvertToPlayedGame(gameState: winnerResults.GameStatus,
                                             winningPlayer: winnerResults.Winners.First());
+
+                    ////Set winner stats here.
+                    //await _gameService.SetFinalStatsOfPlayedFinishedGame(playedGame);
                     await _gameService.SaveGameAsync(playedGame);
                 }
                 if (winnerResults.GameStatus == GameStatus.Draw)
@@ -256,7 +260,7 @@ public partial class CurrentGameViewModel(IPopupService popupService, GameServic
         //if no dealer set, and it is round 1, call set random dealer.
         if(dealerFound is null && roundCount == 1)
         {
-            return results = await _gameService.SetRandomDealerForCurrentGame(value);
+            return results = await _gameService.SetRandomDealerForCurrentGameAsync(value);
         }
         //if dealer is set, and it is round 1, do nothing
         if(dealerFound is not null && roundCount == 1)
@@ -266,12 +270,12 @@ public partial class CurrentGameViewModel(IPopupService popupService, GameServic
         //if dealer is set and it is round 2+, call set next dealer.
         if (dealerFound is not null && roundCount > 1)
         {
-            return results = await _gameService.SetNextDealerForNewRound(value);
+            return results = await _gameService.SetNextDealerForNewRoundAsync(value);
         }
         //should not hit this, but default incase. 
         else
         {
-            return results = await _gameService.SetRandomDealerForCurrentGame(value);
+            return results = await _gameService.SetRandomDealerForCurrentGameAsync(value);
         }
     }
     partial void OnCurrentRoundChanged(RoundModel value)
@@ -361,6 +365,7 @@ public partial class CurrentGameViewModel(IPopupService popupService, GameServic
         if (quitGame)
         {
             var forfeitGame = CurrentGame.ConvertToPlayedGame(GameStatus.Forfeit, null);
+
             await _gameService.SaveGameAsync(forfeitGame);
             await Shell.Current.GoToAsync($"///{nameof(MainPage)}");
             return true;
@@ -412,4 +417,26 @@ public partial class CurrentGameViewModel(IPopupService popupService, GameServic
             CurrentGame.Players.Add(p);
         }
     }
+
+        [RelayCommand]
+    private async Task<bool> SetPlayerAsDealer(PlayerModel playerModel)
+    {
+        var results = false;
+        if (MainThread.IsMainThread)
+        {
+            await _gameService.SetGamesDealerAsync(CurrentGame, playerModel);
+            results = true;
+        }
+        else
+        {
+            await MainThread.InvokeOnMainThreadAsync(async () =>
+            {
+                await _gameService.SetGamesDealerAsync(CurrentGame, playerModel);
+                results = true;
+            });
+        }
+        return results;
+    }
+
+
 }

@@ -1,7 +1,4 @@
-﻿
-
-
-namespace RummyBooky.Services;
+﻿namespace RummyBooky.Services;
 
 public class GameService
 {
@@ -14,7 +11,7 @@ public class GameService
         }
     }
     private readonly string _savedGamesFolder = string.Empty;
-    private readonly string[] _gameFiles = [];
+    private Dictionary<Guid, PlayerModel> _allPlayers = [];
 
     public NewGameModel GetNewGameModel()
     {
@@ -75,7 +72,7 @@ public class GameService
         return results;
     }
 
-    public async Task<bool> SetPlayersScoreTextToEmpty(PlayerModel player)
+    public async Task<bool> SetPlayersScoreTextToEmptyAsync(PlayerModel player)
     {
         var results = false;
         player.PlayerScoreText = string.Empty;
@@ -148,7 +145,7 @@ public class GameService
         return results;
     }
 
-    public async Task<bool> SetCurrentGameStatus(CurrentGameModel currentGame)
+    public async Task<bool> SetCurrentGameStatusAsync(CurrentGameModel currentGame)
     {
         var results = false;
         return results;
@@ -174,24 +171,29 @@ public class GameService
         return results;
     }
 
-    public async Task<List<GameModel>> LoadActiveGamesAsync()
+
+    private IEnumerable<string> EnumerateGameFiles()
     {
-        var activeGames = new List<GameModel>();
-        var gameFiles = Directory.GetFiles(_savedGamesFolder, "game_*.json");
+        return Directory.EnumerateFiles(_savedGamesFolder, "game_*.json");
+    }
+    public async Task<List<CurrentGameModel>> LoadActiveGamesAsync()
+    {
+        var activeGames = new List<CurrentGameModel>();
+        //var gameFiles = Directory.GetFiles(_savedGamesFolder, "game_*.json");
         //var options = new JsonSerializerOptions
         //{
         //    ReferenceHandler = ReferenceHandler.Preserve,
         //    MaxDepth = 256
         //};
 
-        foreach (var file in gameFiles)
+        foreach (var file in EnumerateGameFiles())
         {
 
             var gameJson = await File.ReadAllTextAsync(file);
             var game = JsonSerializer.Deserialize<GameModel>(gameJson);
             if (game is { IsGameActive: true })
             {
-                activeGames.Add(game);
+                activeGames.Add((CurrentGameModel)game);
             }
         }
         return activeGames;
@@ -200,14 +202,13 @@ public class GameService
     public async Task<List<GameModel>> LoadPlayedGamesAsync()
     {
         var playedGames = new List<GameModel>();
-        var gameFiles = Directory.GetFiles(_savedGamesFolder, "game_*.json");
-        //var options = new JsonSerializerOptions
-        //{
-        //    ReferenceHandler = ReferenceHandler.Preserve,
-        //    MaxDepth = 256
-        //};
-
-        foreach (var file in gameFiles)
+        //gameFiles = Directory.GetFiles(_savedGamesFolder, "game_*.json");
+        var options = new JsonSerializerOptions
+        {
+            ReferenceHandler = ReferenceHandler.Preserve,
+            MaxDepth = 256
+        };
+        foreach (var file in EnumerateGameFiles())
         {
 
             var gameJson = await File.ReadAllTextAsync(file);
@@ -247,7 +248,7 @@ public class GameService
         return results;
     }
 
-    public async Task<bool> SetGamesDealer(GameModel currentGame, PlayerModel playerModel)
+    public async Task<bool> SetGamesDealerAsync(GameModel currentGame, PlayerModel playerModel)
     {
         var results = false;
         foreach (var player in currentGame.Players)
@@ -255,12 +256,12 @@ public class GameService
             if (player.ID == playerModel.ID)
             {
 
-                //if current player is the dealer already, then reset all players to false.
+                //if current player is the dealer already, then reset all playersDictionary to false.
                 if (player.IsDealer == true)
                     player.IsDealer = false;
                 else
                     player.IsDealer = true;
-                    results = true;
+                results = true;
             }
             else
             {
@@ -275,7 +276,7 @@ public class GameService
     /// </summary>
     /// <param name="currentGame">The Current Game Model that will get assigned a random dealer.</param>
     /// <returns></returns>
-    public async Task<bool> SetRandomDealerForCurrentGame(GameModel currentGame)
+    public async Task<bool> SetRandomDealerForCurrentGameAsync(GameModel currentGame)
     {
         var results = false;
         var playerCount = currentGame.Players.Count;
@@ -295,7 +296,7 @@ public class GameService
     /// </summary>
     /// <param name="currentGame"></param>
     /// <returns></returns>
-    public async Task<bool> SetNextDealerForNewRound(GameModel currentGame)
+    public async Task<bool> SetNextDealerForNewRoundAsync(GameModel currentGame)
     {
         var results = false;
         var currentDealerIndex = currentGame
@@ -311,5 +312,192 @@ public class GameService
         currentGame.Players[nextDealerIndex].IsDealer = true; // next dealer.
         results = true;
         return true;
+    }
+
+    public async Task<bool> LoadAllPlayersAsync()
+    {
+        var results = false;
+        _allPlayers = new Dictionary<Guid, PlayerModel>();
+
+        foreach (var filePath in EnumerateGameFiles())
+        {
+            var gameJson = await File.ReadAllTextAsync(filePath);
+            var tempGameModel = JsonSerializer.Deserialize<GameModel>(gameJson);
+
+            if (tempGameModel is not { Players: { } playerList })
+                continue;
+
+            var isPlayedGame = tempGameModel is PlayedGameModel;
+
+            foreach (var player in playerList)
+            {
+                if (!_allPlayers.TryGetValue(player.ID, out var agg))
+                {
+                    agg = ToRosterPlayer(player);
+                    _allPlayers.Add(player.ID, agg);
+                }
+
+                if (isPlayedGame)
+                {
+                    agg.TotalGamesPlayed += 1;
+                    var playedGame = (PlayedGameModel)tempGameModel;
+
+                    if (playedGame.GameState is GameStatus.Won)
+                    {
+                        agg.LifeTimeScore += player.PlayerScore;
+                        if (playedGame.WinningPlayer?.ID == player.ID)
+                            agg.GamesWon += 1;
+                        else
+                            agg.GamesLost += 1;
+
+                        UpdatePlayerAggregateHighestLowestHands(aggregate: agg, source: player);
+                    }
+                    else if (playedGame.GameState is GameStatus.Draw)
+                    {
+                        //Draw. Just calculate lifetime score
+                        //no one lost or won.
+                        agg.LifeTimeScore += player.PlayerScore;
+                        agg.GameDraws += 1;
+                        UpdatePlayerAggregateHighestLowestHands(aggregate: agg, source: player);
+                    }
+                    else if (playedGame.GameState is GameStatus.Forfeit)
+                    {
+                        agg.GamesForfeit += 1;
+                    }
+                }
+            }
+            results = true;
+        }
+        return results;
+    }
+
+    private static void UpdatePlayerAggregateHighestLowestHands(PlayerModel aggregate, PlayerModel source)
+    {
+        if (source.HighestScoredHand > aggregate.HighestScoredHand)
+        {
+            aggregate.HighestScoredHand = source.HighestScoredHand;
+        }
+        if (source.LowestScoredHand < aggregate.LowestScoredHand)
+        {
+            aggregate.LowestScoredHand = source.LowestScoredHand;
+        }
+    }
+    public async Task<PlayerModel[]> GetAllPlayerModelsArray()
+    {
+        return _allPlayers.Values
+            .OrderBy(p => p.PlayerName)
+            .Select(p => ToRosterPlayer(p))
+            .ToArray();
+    }
+
+    public async Task<bool> AddExistingPlayerModelToNewGameAsync(NewGameModel gameModelTemplate, PlayerModel player)
+    {
+        var results = false;
+        if (!_allPlayers.TryGetValue(player.ID, out var profile))
+        {
+            throw new InvalidDataException($"Player not found: {player.PlayerName} ID: {player.ID}");
+        }
+
+        gameModelTemplate.Players.Add(ToRosterPlayer(profile));
+        results = true;
+        return results;
+    }
+
+    public async Task<bool> SetFinalStatsOfDrawGame(PlayedGameModel playedGame)
+    {
+        var results = false;
+        foreach (var player in playedGame.Players)
+        {
+            player.TotalGamesPlayed += 1;
+            player.GameDraws += 1;
+            results = true;
+        }
+        return results;
+    }
+
+    public async Task<bool> SetFinalStatsOfForfeitGame(PlayedGameModel playedGame)
+    {
+        var results = false;
+        foreach (var player in playedGame.Players)
+        {
+            player.TotalGamesPlayed += 1;
+            player.GamesForfeit += 1;
+            results = true;
+        }
+        return results;
+    }
+
+    public async Task<bool> SetFinalStatsOfPlayedFinishedGame(PlayedGameModel playedGame)
+    {
+        var results = false;
+        foreach (var player in playedGame.Players)
+        {
+            var historicalPlayerModel = _allPlayers[player.ID];
+            historicalPlayerModel.TotalGamesPlayed += 1;
+            historicalPlayerModel.LifeTimeScore += player.PlayerScore;
+            if (playedGame.WinningPlayer.ID == historicalPlayerModel.ID)
+                historicalPlayerModel.GamesWon += 1;
+            else
+                historicalPlayerModel.GamesLost += 1;
+        }
+        results = true;
+        return results;
+    }
+
+    private static PlayerModel ToRosterPlayer(PlayerModel source)
+    {
+        // Keep identity and lifetime stats; clear per-game fields
+        return new PlayerModel
+        {
+            ID = source.ID,
+            PlayerName = source.PlayerName,
+            PlayerCreatedDate = source.PlayerCreatedDate,
+            LifeTimeScore = source.LifeTimeScore,
+            TotalGamesPlayed = source.TotalGamesPlayed,
+            GamesWon = source.GamesWon,
+            GamesLost = source.GamesLost,
+            GameDraws = source.GameDraws,
+            GamesForfeit = source.GamesForfeit,
+            HighestScoredHand = source.HighestScoredHand,
+            LowestScoredHand = source.LowestScoredHand,
+            PlayerScore = 0,
+            PlayerScoreText = string.Empty,
+            IsDealer = false
+        };
+    }
+
+    private static PlayerModel FreshGameInstance(PlayerModel profile)
+    {
+        // New instance for this game; same identity, per-game fields reset
+        return new PlayerModel
+        {
+            ID = profile.ID,
+            PlayerName = profile.PlayerName,
+            PlayerCreatedDate = profile.PlayerCreatedDate,
+            LifeTimeScore = profile.LifeTimeScore,
+            TotalGamesPlayed = profile.TotalGamesPlayed,
+            GamesWon = profile.GamesWon,
+            GamesLost = profile.GamesLost,
+            GameDraws = profile.GameDraws,
+            GamesForfeit = profile.GamesForfeit,
+            HighestScoredHand = 0,
+            LowestScoredHand = 0,
+            PlayerScore = 0,
+            PlayerScoreText = string.Empty,
+            IsDealer = false
+        };
+    }
+
+    public async Task<bool> CreateFreshPlayerTemplatesForCurrentGame(NewGameModel gameModelTemplate)
+    {
+        var results = false;
+        var players = gameModelTemplate.Players.ToList<PlayerModel>();
+        gameModelTemplate.Players.Clear();
+        foreach (var player in players)
+        {
+            gameModelTemplate.Players.Add(FreshGameInstance(player));
+        }
+        results = true;
+        return results;
     }
 }

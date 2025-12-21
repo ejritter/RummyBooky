@@ -26,8 +26,29 @@ public static class GameModelExtensions
 
     public static PlayedGameModel ConvertToPlayedGame(this CurrentGameModel currentGame, GameStatus gameState, PlayerModel winningPlayer)
     {
+        if (gameState is GameStatus.Forfeit)
+        {
+            
+            foreach (var player in currentGame.Players)
+            {
+                player.HighestScoredHand = 0;
+                player.LowestScoredHand = int.MaxValue;
+                player.PlayerScoreText = string.Empty;
+                player.PlayerScore = 0;
+            }
+
+            foreach (var currentRound in currentGame.Round)
+            {
+                currentRound.PlayerHighestScoringHand = null;
+                currentRound.CurrentHighestScoredHandValue = int.MinValue;
+                currentRound.PlayerLowestScoringHand = null;
+                currentRound.CurrentLowestScoredHandValue = int.MaxValue;
+                currentRound.PlayersScoredHandThisRound.Clear(); 
+            }
+        }
         return new PlayedGameModel
         {
+            
             GameId = currentGame.GameId,
             Players = currentGame.Players,
             IsGameActive = false,
@@ -51,7 +72,6 @@ public static class GameModelExtensions
             LeadingPlayer = last.LeadingPlayer,
             PlayerHighestScoringHand = last.PlayerHighestScoringHand,
             CurrentHighestScoredHandValue = last.CurrentHighestScoredHandValue,
-            // Preserve lowest-hand context into the next round as well.
             PlayerLowestScoringHand = last.PlayerLowestScoringHand,
             CurrentLowestScoredHandValue = last.CurrentLowestScoredHandValue
         };
