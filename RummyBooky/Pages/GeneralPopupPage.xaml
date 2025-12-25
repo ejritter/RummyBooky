@@ -11,10 +11,57 @@
              BackgroundColor="{AppThemeBinding Light={x:StaticResource White}, Dark={x:StaticResource Black}}"
              >
     <VerticalStackLayout>
-        <Label Text="{Binding Title}" />
-        <Label Text="{Binding Message}"/>
-         
-        <Button Text="Okay" Command="{Binding OkayClickedCommand}"  />
-        <Button Text="Cancel" Command="{Binding CancelClickedCommand}" />
+        <Label Text="{Binding Title}"
+               HorizontalOptions="Center"
+               FontSize="35"
+               FontAttributes="Bold"/>
+        <Label Text="{Binding Message}"
+               HorizontalOptions="Center"
+               FontSize="17"
+               />
+        <CollectionView IsVisible="{Binding DisplayWinners}"
+                        ItemsSource="{Binding WinningPlayers}"
+                        SelectionMode="Single"
+                        SelectedItem="{Binding SelectedPlayer}"
+                        >
+            <CollectionView.ItemTemplate>
+                <DataTemplate x:DataType="models:PlayerModel">
+                    <Border x:Name="GridBorder"
+                            Style="{StaticResource ThemeBorder}">
+                            <VisualStateManager.VisualStateGroups>
+                                <VisualStateGroup x:Name="CommonStates">
+                                    <VisualState x:Name="Normal">
+                                    </VisualState>
+                                    <VisualState x:Name="Selected">
+                                        <VisualState.Setters>
+                                            <!-- pick your color or keep Transparent -->
+                                            <Setter  TargetName="GridBorder" Property="VisualElement.BackgroundColor"
+                                                 Value="{AppThemeBinding Light={x:StaticResource Pink}, Dark={x:StaticResource DeepRed}}" />
+                                        </VisualState.Setters>
+                                    </VisualState>
+                                </VisualStateGroup>
+                            </VisualStateManager.VisualStateGroups>
+                        <Grid x:Name="WinnerGrid"
+                              ColumnDefinitions="Auto"
+                              RowDefinitions="Auto"
+                              >
+                            <Label Grid.Column="0" Grid.Row="0"
+                               Text="{Binding PlayerName}"
+                               Style="{StaticResource PlayerLabel}"
+                               VerticalOptions="Center"
+                               HorizontalOptions="Center"
+                               />
+
+                        </Grid>
+                    </Border>
+                </DataTemplate>
+            </CollectionView.ItemTemplate>
+        </CollectionView>
+        <HorizontalStackLayout HorizontalOptions="Center" Spacing="10">
+            <Button IsVisible="{Binding DisplayOkayButton}" Text="Okay" Command="{Binding OkayClickedCommand}"  />
+            <Button IsVisible="{Binding DisplayWinnerButton}" Text="Winner" Command="{Binding ConfirmWinnerCommand}"  />
+            <Button IsVisible="{Binding DisplayWinners}" Text="Draw" Command="{Binding DrawGameCommand}" />
+            <Button Text="Cancel" Command="{Binding CancelClickedCommand}" />
+        </HorizontalStackLayout>
     </VerticalStackLayout>
 </pages:BasePopupPage>

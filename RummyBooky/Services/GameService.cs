@@ -10,6 +10,8 @@ public class GameService
             Directory.CreateDirectory(_savedGamesFolder);
         }
     }
+
+
     private readonly string _savedGamesFolder = string.Empty;
     private Dictionary<Guid, PlayerModel> _allPlayers = [];
 
@@ -499,5 +501,16 @@ public class GameService
         }
         results = true;
         return results;
+    }
+
+    public async Task<List<PlayerModel>> GetTopPlayersAsync(int count = 10)
+    {
+        return _allPlayers.Values
+            .OrderByDescending(p => p.LifeTimeScore)
+            .ThenByDescending(p => p.GamesWon)
+            .ThenBy(p => p.PlayerName)
+            .Take(count)
+            .Select(p => ToRosterPlayer(p))
+            .ToList();         
     }
 }

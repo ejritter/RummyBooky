@@ -31,6 +31,17 @@
         </Setter>
         <Setter Property="BackgroundColor" Value="Transparent" />
     </Style>
+    <Style TargetType="Border" x:Key="ThemeBorder">
+        <Setter Property="Stroke" Value="{AppThemeBinding Light={StaticResource Pink}, Dark={StaticResource Pink}}" />
+        <Setter Property="StrokeThickness" Value="4" />
+        <Setter Property="Padding" Value="15" />
+        <Setter Property="StrokeShape">
+            <Setter.Value>
+                <RoundRectangle CornerRadius="8" />
+            </Setter.Value>
+        </Setter>
+        <Setter Property="BackgroundColor" Value="Transparent" />
+    </Style>
     <Style TargetType="Border" x:Key="TagButtonTransparentBorder">
         <Setter Property="Stroke" Value="Transparent" />
         <Setter Property="StrokeThickness" Value="4" />

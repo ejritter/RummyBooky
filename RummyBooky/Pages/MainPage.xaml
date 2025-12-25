@@ -16,7 +16,8 @@
         <Button Text="New Game"
                 Command="{Binding NewGameCommand}"
                 />
-        <Button Text="Leader Boards" />
+        <Button Text="Leaderboard"
+                Command="{Binding LeaderboardCommand}"/>
         <Button Text="Resume Game"
                 Command="{Binding ResumeGameCommand}"
                 />

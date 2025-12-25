@@ -63,9 +63,23 @@
 	</ItemGroup>
 
 	<ItemGroup>
+	  <AndroidResource Remove="savedgames\**" />
+	  <Compile Remove="savedgames\**" />
+	  <EmbeddedResource Remove="savedgames\**" />
+	  <MauiCss Remove="savedgames\**" />
+	  <MauiXaml Remove="savedgames\**" />
+	  <None Remove="savedgames\**" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <None Remove="RummyBooky.keystore" />
+	  <None Remove="savedgames.tar" />
+	</ItemGroup>
+
+	<ItemGroup>
 		<PackageReference Include="CommunityToolkit.Maui" Version="13.0.0" />
 		<PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.0" />
-		<PackageReference Include="Microsoft.Maui.Controls" Version="10.0.11" />
+		<PackageReference Include="Microsoft.Maui.Controls" Version="10.0.20" />
 		<PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="10.0.1" />
 		<PackageReference Include="Plugin.Maui.Audio" Version="4.0.0" />
 		<PackageReference Include="Serilog" Version="4.3.0" />
@@ -79,6 +93,9 @@
 	    <Generator>MSBuild:Compile</Generator>
 	  </MauiXaml>
 	  <MauiXaml Update="Pages\GeneralPopupPage.xaml">
+	    <Generator>MSBuild:Compile</Generator>
+	  </MauiXaml>
+	  <MauiXaml Update="Pages\LeaderboardPage.xaml">
 	    <Generator>MSBuild:Compile</Generator>
 	  </MauiXaml>
 	  <MauiXaml Update="Pages\MainPage.xaml">

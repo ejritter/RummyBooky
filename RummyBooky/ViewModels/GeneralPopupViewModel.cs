@@ -7,7 +7,7 @@ public partial class GeneralPopupViewModel(IPopupService popupService) : BasePop
     public override void ApplyQueryAttributes(IDictionary<string, object> query)
     {
         base.ApplyQueryAttributes(query);
-        if (query.TryGetValue("players", out var playersList) && 
+        if (query.TryGetValue("players", out var playersList) &&
             playersList is IEnumerable<PlayerModel> players)
         {
             foreach (var player in players)
@@ -15,34 +15,82 @@ public partial class GeneralPopupViewModel(IPopupService popupService) : BasePop
                 WinningPlayers.Add(player);
             }
         }
-        
+        CurrentGameStatus = (GameStatus)query["gameStatus"];
+        //CurrentGameStatus == draw. 
+        //allow user to select draw option or select a winner.
+        DisplayWinners = CurrentGameStatus == GameStatus.Draw;
+        DisplayWinnerButton = CurrentGameStatus == GameStatus.Draw;
+
+        //if gamestatus is NOT won then false.
+        DisplayOkayButton = CurrentGameStatus == GameStatus.Won;
+
+        PopupResults = new PopupResultsModel();
     }
 
-    public ObservableCollection<PlayerModel> WinningPlayers { get; set; } = new();
+    [ObservableProperty]
+    public partial PopupResultsModel? PopupResults{ get; set; } = null;
 
     [ObservableProperty]
-    public partial PlayerModel? SelectedWinner { get; set; } = null;
+    public partial bool DisplayOkayButton { get; set; } = false;
 
     [ObservableProperty]
-    public partial GameStatus DrawGame { get; set; } = GameStatus.Draw;
+    public partial bool DisplayWinnerButton { get; set; } = false;
+
+    [ObservableProperty]
+    public partial GameStatus CurrentGameStatus { get; set; } = GameStatus.Unknown;
+
+    [ObservableProperty]
+    public partial PlayerModel? SelectedPlayer { get; set; } = null;
+    public ObservableCollection<PlayerModel> WinningPlayers { get; set; } = [];
+
+    [ObservableProperty]
+    public partial bool DisplayWinners { get; set; } = false;
 
     [RelayCommand]
     private async Task OkayClicked()
     {
-        // Build a result object: if a winner is selected, use Won; otherwise use selected status (e.g., Draw)
-        //var result = new PopupResult
-        //{
-        //    IsConfirmed = true,
-        //    WinningPlayer = SelectedWinner,
-        //    Status = SelectedWinner is not null ? GameStatus.Won : DrawGame
-        //};
+        PopupResults.Confirmed = true;
+        PopupResults.GameState = GameStatus.Won;
+        PopupResults.SelectedWinner = WinningPlayers.First();
+        await _popupService.ClosePopupAsync(Shell.Current, PopupResults);
+    }
+    [RelayCommand]
+    private async Task DrawGame()
+    {
+        PopupResults.Confirmed = true;
+        PopupResults.GameState = GameStatus.Draw;
+        await _popupService.ClosePopupAsync(Shell.Current, PopupResults);
+    }
 
-        await _popupService.ClosePopupAsync(Shell.Current, true);
+    partial void OnSelectedPlayerChanged(PlayerModel? oldValue, PlayerModel? newValue)
+    {
+        CanExecuteConfirmWinner();
+        ConfirmWinnerCommand.NotifyCanExecuteChanged();
+    }
+    [RelayCommand(CanExecute = nameof(CanExecuteConfirmWinner))]
+    private async Task ConfirmWinner()
+    {
+        PopupResults.Confirmed = true;
+        PopupResults.GameState = GameStatus.Won;
+        PopupResults.SelectedWinner = SelectedPlayer;
+        await _popupService.ClosePopupAsync(Shell.Current, PopupResults);
     }
 
     [RelayCommand]
     private async Task CancelClicked()
     {
-        await _popupService.ClosePopupAsync(Shell.Current, false);
+        PopupResults.Confirmed = false;
+        await _popupService.ClosePopupAsync(Shell.Current, PopupResults);
+    }
+
+    private bool CanExecuteConfirmWinner()
+    {
+        var results = false;
+        if (SelectedPlayer == null)
+            return results;
+        else if (SelectedPlayer is not null)
+            results = true;
+
+        return results;
     }
 }

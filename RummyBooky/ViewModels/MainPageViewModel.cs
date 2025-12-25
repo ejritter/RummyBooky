@@ -1,4 +1,6 @@
-﻿namespace RummyBooky.ViewModels;
+﻿using System.Collections.Immutable;
+
+namespace RummyBooky.ViewModels;
 
 public partial class MainPageViewModel(IPopupService popupService, GameService gameService) 
     : BaseViewModel(popupService, gameService)
@@ -21,6 +23,7 @@ public partial class MainPageViewModel(IPopupService popupService, GameService g
     [RelayCommand]
     private async Task Appearing()
     {
+     //   await CopyModifiedGamesBackToDevice();
         await LoadActiveGamesAsync();
         await LoadPlayedGamesAsync();
         await LoadAllPlayersAsync();
@@ -71,6 +74,12 @@ public partial class MainPageViewModel(IPopupService popupService, GameService g
         //    ["AllPlayerModels"] = playersArray
         //});
         await Shell.Current.GoToAsync(nameof(NewGamePage));
+    }
+
+    [RelayCommand]
+    private async Task Leaderboard()
+    {
+        await Shell.Current.GoToAsync(nameof(LeaderboardPage));
     }
 
     [RelayCommand(CanExecute = nameof(CanResumeGame))]

@@ -83,62 +83,60 @@
                 Style="{StaticResource TagEntryBorder}"
                 IsVisible="{Binding ShowPlayerSuggestions}"
                 >
-            <CollectionView 
-                            x:Name="SuggestedPlayersCollection"
-                            ItemsSource="{Binding FilteredPlayerModelsByName}"
-                            SelectionMode="Single"
-                            SelectedItem="{Binding SelectedSuggestedPlayerModel}"
-                            >
-                <CollectionView.ItemTemplate>
-                    <DataTemplate x:DataType="models:PlayerModel">
-                        <HorizontalStackLayout Spacing="10">
-                            <VisualStateManager.VisualStateGroups>
-                                <VisualStateGroup x:Name="CommonStates">
-                                    <VisualState x:Name="Normal">
-                                    </VisualState>
-                                    <VisualState x:Name="Selected">
-                                        <VisualState.Setters>
-                                            <!-- pick your color or keep Transparent -->
-                                            <Setter Property="VisualElement.BackgroundColor"
-                                                    Value="{AppThemeBinding Light={x:StaticResource Pink}, Dark={x:StaticResource DeepRed}}" />
-                                        </VisualState.Setters>
-                                    </VisualState>
-                                </VisualStateGroup>
-                            </VisualStateManager.VisualStateGroups>
-                            <HorizontalStackLayout.GestureRecognizers>
-                                <TapGestureRecognizer NumberOfTapsRequired="2"
-                                                      Command="{Binding Source={RelativeSource AncestorType={x:Type pages:NewGamePage}}, 
-                                                                Path=BindingContext.AddSuggestedPlayerCommand}"/>
-                            </HorizontalStackLayout.GestureRecognizers>
-                            <Label Style="{StaticResource PlayerLabel}" 
-                                   Text="{Binding PlayerName}"
-                                   HorizontalOptions="Start"
-                                   Padding="8,4"
-                                   />
-                            <Label Style="{StaticResource PlayerLabel}" 
-                                   Text="{Binding TotalGamesPlayed, StringFormat='Total Games:  {0}'}"
-                                   HorizontalOptions="End"
-                                   Padding="8,4"
-                                   />
-                            <Label Style="{StaticResource PlayerLabel}" 
-                                   Text="{Binding GamesWon, StringFormat='Won:  {0}'}" 
-                                   HorizontalOptions="End"
-                                   Padding="8,4"
-                                   />
-                            <Label Style="{StaticResource PlayerLabel}" 
-                                   Text="{Binding GamesLost, StringFormat='Lost:  {0}'}" 
-                                   HorizontalOptions="End"
-                                   Padding="8,4"
-                                   />
-                            <Label Style="{StaticResource PlayerLabel}" 
-                                   Text="{Binding PlayerCreatedDate, StringFormat='Created:  {0}'}" 
-                                   HorizontalOptions="End"
-                                   Padding="8,4"
-                                   />
-                        </HorizontalStackLayout>
-                    </DataTemplate>
-                </CollectionView.ItemTemplate>
-            </CollectionView>
+            <CarouselView
+                x:Name="SuggestedPlayersCollection"
+                ItemsSource="{Binding FilteredPlayerModelsByName}"
+                CurrentItem="{Binding SelectedSuggestedPlayerModel}"
+                PeekAreaInsets="24">
+    <CarouselView.ItemsLayout>
+        <LinearItemsLayout Orientation="Horizontal"
+                           SnapPointsType="Mandatory"
+                           SnapPointsAlignment="Center" />
+    </CarouselView.ItemsLayout>
+
+    <CarouselView.ItemTemplate>
+        <DataTemplate x:DataType="models:PlayerModel">
+            <VerticalStackLayout Spacing="10" Padding="8,4">
+                <VisualStateManager.VisualStateGroups>
+                    <VisualStateGroup x:Name="CommonStates">
+                        <VisualState x:Name="Normal" />
+                        <VisualState x:Name="Selected">
+                            <VisualState.Setters>
+                                <Setter Property="VisualElement.BackgroundColor"
+                                        Value="{AppThemeBinding Light={x:StaticResource Pink}, Dark={x:StaticResource DeepRed}}" />
+                            </VisualState.Setters>
+                        </VisualState>
+                    </VisualStateGroup>
+                </VisualStateManager.VisualStateGroups>
+
+                <VerticalStackLayout.GestureRecognizers>
+                    <TapGestureRecognizer NumberOfTapsRequired="2"
+                                          Command="{Binding Source={RelativeSource AncestorType={x:Type pages:NewGamePage}}, Path=BindingContext.AddSuggestedPlayerCommand}" />
+                </VerticalStackLayout.GestureRecognizers>
+
+                <Label Style="{StaticResource PlayerLabel}"
+                       Text="{Binding PlayerName}"
+                       HorizontalOptions="Start" />
+
+                <Label Style="{StaticResource PlayerLabel}"
+                       Text="{Binding TotalGamesPlayed, StringFormat='Total Games:  {0}'}"
+                       HorizontalOptions="End" />
+
+                <Label Style="{StaticResource PlayerLabel}"
+                       Text="{Binding GamesWon, StringFormat='Won:  {0}'}"
+                       HorizontalOptions="End" />
+
+                <Label Style="{StaticResource PlayerLabel}"
+                       Text="{Binding GamesLost, StringFormat='Lost:  {0}'}"
+                       HorizontalOptions="End" />
+
+                <Label Style="{StaticResource PlayerLabel}"
+                       Text="{Binding PlayerCreatedDate, StringFormat='Created:  {0}'}"
+                       HorizontalOptions="End" />
+            </VerticalStackLayout>
+        </DataTemplate>
+    </CarouselView.ItemTemplate>
+</CarouselView>
         </Border>
         <!-- Header: small banner + column captions; matches item template columns exactly -->
         <Grid x:Name="GridTemplate"

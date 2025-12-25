@@ -14,14 +14,17 @@ public abstract class BaseViewModel(IPopupService popupService, GameService game
         AppTheme.Dark => AppTheme.Dark,
         _ => AppTheme.Dark
     };
-    public virtual async Task<bool> ShowPopupAsync(string title, string message, bool isDismissable = true, List<PlayerModel>? players = null)
+    public virtual async Task<PopupResultsModel> ShowPopupAsync(string title, string message, bool isDismissable = true, List<PlayerModel>? players = null, GameStatus? gameStatus = GameStatus.Unknown)
     {
         var queryAttributes = new Dictionary<string, object>
         {
             [nameof(BasePopupViewModel.Title)] = title,
             [nameof(BasePopupViewModel.Message)] = message
         };
-
+    if (players != null)
+        queryAttributes["players"] = players;
+    if (gameStatus != null)
+        queryAttributes["gameStatus"] = gameStatus;
         var results = await _popupService
                                 .ShowPopupAsync<GeneralPopupViewModel>
                                    (shell: Shell.Current,
@@ -32,13 +35,13 @@ public abstract class BaseViewModel(IPopupService popupService, GameService game
                                     },
                                     shellParameters: queryAttributes);
         if (results is not null &&
-                 results is IPopupResult<bool> userResults)
+                 results is IPopupResult<PopupResultsModel> userResults)
         {
             return userResults.Result;
         }
         else
         {
-            return false;
+            return new PopupResultsModel();
         }
     }
 }

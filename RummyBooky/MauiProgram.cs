@@ -22,14 +22,16 @@ public static class MauiProgram
 
         builder.Services.AddSingleton(AudioManager.Current);
         builder.Services.AddSingleton<IAppAudioService, AppAudioService>();
-
         builder.Services.AddSingleton<GameService>();
 
         builder.Services.AddTransientPopup<GeneralPopupPage, GeneralPopupViewModel>();
+
         builder.Services.AddSingleton<MainPageViewModel>();
         builder.Services.AddSingleton<MainPage>();
         builder.Services.AddSingleton<NewGameViewModel>();
         builder.Services.AddSingleton<NewGamePage>();
+        builder.Services.AddSingleton<LeaderboardViewModel>();
+        builder.Services.AddSingleton<LeaderboardPage>();
         builder.Services.AddTransient<CurrentGamePage>();
         builder.Services.AddTransient<CurrentGameViewModel>();
 

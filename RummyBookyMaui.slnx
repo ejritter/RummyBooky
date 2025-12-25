@@ -1,3 +1,5 @@
 <Solution>
-  <Project Path="RummyBooky/RummyBooky.csproj" />
+  <Project Path="RummyBooky/RummyBooky.csproj">
+    <Deploy Solution="Debug|*" />
+  </Project>
 </Solution>

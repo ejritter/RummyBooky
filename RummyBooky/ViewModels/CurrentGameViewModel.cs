@@ -72,24 +72,27 @@ public partial class CurrentGameViewModel(IPopupService popupService, GameServic
             var winnerResults = await _gameService.CheckForWinnersAsync(CurrentGame);
             if (winnerResults.Results)
             {
-                var userConfirmed = false;
+                var popupResults = new PopupResultsModel();
                 if (winnerResults.GameStatus == GameStatus.Won)
                 {
-                    userConfirmed = await ShowPopupAsync(
+                    popupResults = await ShowPopupAsync(
                         title: "We have a winner!",
                         message: $"Congratulations {winnerResults.Winners.First().PlayerName}!!!!",
+                        players: winnerResults.Winners,
+                        gameStatus: winnerResults.GameStatus,
                         isDismissable: false);
                 }
                 else if (winnerResults.GameStatus == GameStatus.Draw)
                 {
-                    userConfirmed = await ShowPopupAsync(
-                        title: "Who is the winner?",
+                    popupResults = await ShowPopupAsync(
+                        title: "We have a draw!",
                         message: "Choose a winner or make it a draw.",
                         players: winnerResults.Winners,
+                        gameStatus: winnerResults.GameStatus,
                         isDismissable: false);
                 }
 
-                if (!userConfirmed)
+                if (!popupResults.Confirmed)
                 {
                     // ROLLBACK all mutations
                     foreach (var snap in playerSnapshots)
@@ -124,20 +127,20 @@ public partial class CurrentGameViewModel(IPopupService popupService, GameServic
 
                 // User confirmed winner: you might mark game finished and save here
 
-                if (winnerResults.GameStatus == GameStatus.Won)
+                if (popupResults.GameState == GameStatus.Won)
                 {
                     var playedGame = CurrentGame
-                       .ConvertToPlayedGame(gameState: winnerResults.GameStatus,
-                                            winningPlayer: winnerResults.Winners.First());
+                       .ConvertToPlayedGame(gameState: popupResults.GameState,
+                                            winningPlayer: popupResults.SelectedWinner);
 
                     ////Set winner stats here.
                     //await _gameService.SetFinalStatsOfPlayedFinishedGame(playedGame);
                     await _gameService.SaveGameAsync(playedGame);
                 }
-                if (winnerResults.GameStatus == GameStatus.Draw)
+                if (popupResults.GameState == GameStatus.Draw)
                 {
                     var playedGame = CurrentGame
-                        .ConvertToPlayedGame(winnerResults.GameStatus, null);
+                        .ConvertToPlayedGame(popupResults.GameState, null);
                     await _gameService.SaveGameAsync(playedGame);
                 }
                 if (MainThread.IsMainThread)
@@ -361,8 +364,8 @@ public partial class CurrentGameViewModel(IPopupService popupService, GameServic
     [RelayCommand]
     private async Task<bool> QuitGame()
     {
-        var quitGame = await ShowPopupAsync(title: "Quit Game!?", message: "Are you sure you want to quit this game?", isDismissable: true);
-        if (quitGame)
+        var popupResults = await ShowPopupAsync(title: "Quit Game!?", message: "Are you sure you want to quit this game?", isDismissable: true);
+        if (popupResults.Confirmed)
         {
             var forfeitGame = CurrentGame.ConvertToPlayedGame(GameStatus.Forfeit, null);
 

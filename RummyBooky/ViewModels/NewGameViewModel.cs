@@ -58,6 +58,7 @@ public partial class NewGameViewModel(IPopupService popupService, GameService ga
         var results = false;
         if (GameModelTemplate.Players.Count >= IntConstants.MaximumPlayerCount)
             return results;//can't add players at this point. Don't bother suggesting.
+        await HideKeyboard();
         FilteredPlayerModelsByName.Clear();
         //HighlightedSuggestedPlayer = null;
         if (string.IsNullOrWhiteSpace(PlayerNameText))
@@ -195,7 +196,19 @@ public partial class NewGameViewModel(IPopupService popupService, GameService ga
                 .OfType<Entry>()
                 .FirstOrDefault(e => e.IsFocused);
             if (focusedElement != null)
-            await focusedElement.HideKeyboardAsync();
+            {
+                if (MainThread.IsMainThread)
+                {
+                    await focusedElement.HideKeyboardAsync();
+                }
+                else
+                {
+                    await MainThread.InvokeOnMainThreadAsync(async () =>
+                    {
+                        await focusedElement.HideKeyboardAsync();
+                    });
+                }
+            }
             return true;
             
         }
