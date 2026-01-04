@@ -1,5 +1,7 @@
 ﻿namespace RummyBooky.Models;
 
-public abstract class BaseModel : ObservableObject
+public abstract partial class BaseModel : ObservableObject
 {
+    [ObservableProperty]
+    public partial AppTheme? CurrentTheme { get; set; } = Application.Current?.RequestedTheme;
 }

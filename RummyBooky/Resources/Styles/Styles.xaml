@@ -15,6 +15,13 @@
         <Setter Property="FontSize" Value="35" />
     </Style>
 
+    <Style TargetType="Label" x:Key="TagLeaderboardLabel">
+        <Setter Property="TextColor" Value="{AppThemeBinding Light={StaticResource DeepRed}, Dark={StaticResource White}}" />
+        <Setter Property="BackgroundColor" Value="{AppThemeBinding Light={StaticResource Pink}, Dark={StaticResource DeepRed}}" />
+        <Setter Property="FontSize" Value="14" />
+        <Setter Property="FontAttributes" Value="Bold"/>
+    </Style>
+
     <Style TargetType="Entry" x:Key="TagEntry">
         <Setter Property="TextColor" Value="{AppThemeBinding Light={StaticResource DeepRed}, Dark={StaticResource White}}" />
         <Setter Property="FontSize" Value="25" />

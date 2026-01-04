@@ -87,7 +87,8 @@
                 x:Name="SuggestedPlayersCollection"
                 ItemsSource="{Binding FilteredPlayerModelsByName}"
                 CurrentItem="{Binding SelectedSuggestedPlayerModel}"
-                PeekAreaInsets="24">
+                IsSwipeEnabled="{Binding SwipeEnabled}"
+                PeekAreaInsets="0">
     <CarouselView.ItemsLayout>
         <LinearItemsLayout Orientation="Horizontal"
                            SnapPointsType="Mandatory"
@@ -97,43 +98,13 @@
     <CarouselView.ItemTemplate>
         <DataTemplate x:DataType="models:PlayerModel">
             <VerticalStackLayout Spacing="10" Padding="8,4">
-                <VisualStateManager.VisualStateGroups>
-                    <VisualStateGroup x:Name="CommonStates">
-                        <VisualState x:Name="Normal" />
-                        <VisualState x:Name="Selected">
-                            <VisualState.Setters>
-                                <Setter Property="VisualElement.BackgroundColor"
-                                        Value="{AppThemeBinding Light={x:StaticResource Pink}, Dark={x:StaticResource DeepRed}}" />
-                            </VisualState.Setters>
-                        </VisualState>
-                    </VisualStateGroup>
-                </VisualStateManager.VisualStateGroups>
-
                 <VerticalStackLayout.GestureRecognizers>
                     <TapGestureRecognizer NumberOfTapsRequired="2"
-                                          Command="{Binding Source={RelativeSource AncestorType={x:Type pages:NewGamePage}}, Path=BindingContext.AddSuggestedPlayerCommand}" />
+                                          Command="{Binding Source={RelativeSource AncestorType={x:Type pages:NewGamePage}}, 
+                                                    Path=BindingContext.AddSuggestedPlayerCommand}" />
                 </VerticalStackLayout.GestureRecognizers>
-
-                <Label Style="{StaticResource PlayerLabel}"
-                       Text="{Binding PlayerName}"
-                       HorizontalOptions="Start" />
-
-                <Label Style="{StaticResource PlayerLabel}"
-                       Text="{Binding TotalGamesPlayed, StringFormat='Total Games:  {0}'}"
-                       HorizontalOptions="End" />
-
-                <Label Style="{StaticResource PlayerLabel}"
-                       Text="{Binding GamesWon, StringFormat='Won:  {0}'}"
-                       HorizontalOptions="End" />
-
-                <Label Style="{StaticResource PlayerLabel}"
-                       Text="{Binding GamesLost, StringFormat='Lost:  {0}'}"
-                       HorizontalOptions="End" />
-
-                <Label Style="{StaticResource PlayerLabel}"
-                       Text="{Binding PlayerCreatedDate, StringFormat='Created:  {0}'}"
-                       HorizontalOptions="End" />
-            </VerticalStackLayout>
+                            <views:PlayerCardView/>
+                        </VerticalStackLayout>
         </DataTemplate>
     </CarouselView.ItemTemplate>
 </CarouselView>
@@ -146,52 +117,52 @@
               ColumnSpacing="0"
               ColumnDefinitions="*,2,120,2,120,2,120"
               RowDefinitions="60">
-            <BoxView Grid.RowSpan="2"
+            <BoxView Grid.RowSpan="1"
                      Grid.Column="1"
                      Grid.ColumnSpan="7"
                      HorizontalOptions="Fill"
                      VerticalOptions="Fill"
                      Color="{AppThemeBinding Light={StaticResource Pink}, Dark={StaticResource DeepRed}}" />
 
-            <Label Grid.Row="1" Grid.Column="0"
+            <Label Grid.Row="0" Grid.Column="0"
                    Text=""
                    VerticalOptions="Center"
                    HorizontalOptions="Center"/>
 
-            <BoxView Grid.RowSpan="2"
+            <BoxView Grid.RowSpan="1"
                      Grid.Column="1"
                      WidthRequest="1"
                      HorizontalOptions="Center"
                      VerticalOptions="Fill"
                      Color="{AppThemeBinding Light={StaticResource Pink}, Dark={StaticResource DeepRed}}" />
 
-            <Label Grid.Row="1" Grid.Column="2"
+            <Label Grid.Row="0" Grid.Column="2"
                    Text="Played"
                    Style="{StaticResource TagLabel}"
                    VerticalOptions="Center"
                    HorizontalOptions="Center"/>
 
-            <BoxView Grid.RowSpan="2"
+            <BoxView Grid.RowSpan="1"
                      Grid.Column="3"
                      WidthRequest="1"
                      HorizontalOptions="Center"
                      VerticalOptions="Fill"
                      Color="{AppThemeBinding Light={StaticResource Pink}, Dark={StaticResource DeepRed}}" />
 
-            <Label Grid.Row="1" Grid.Column="4"
+            <Label Grid.Row="0" Grid.Column="4"
                    Text="Won"
                    Style="{StaticResource TagLabel}"
                    VerticalOptions="Center"
                    HorizontalOptions="Center"/>
 
-            <BoxView Grid.RowSpan="2"
+            <BoxView Grid.RowSpan="1"
                      Grid.Column="5"
                      WidthRequest="1"
                      HorizontalOptions="Center"
                      VerticalOptions="Fill"
                      Color="{AppThemeBinding Light={StaticResource Pink}, Dark={StaticResource DeepRed}}" />
 
-            <Label Grid.Row="1" Grid.Column="6"
+            <Label Grid.Row="0" Grid.Column="6"
                    Text="Lost"
                    Style="{StaticResource TagLabel}"
                    VerticalOptions="Center"
@@ -282,7 +253,7 @@
                             <BoxView Grid.RowSpan="2"
                                      Grid.Column="1"
                                      WidthRequest="1"
-                                     HorizontalOptions="Start"
+                                     HorizontalOptions="Center"
                                      VerticalOptions="Fill"
                                      Color="{AppThemeBinding Light={StaticResource Pink}, Dark={StaticResource DeepRed}}" />
 
@@ -318,12 +289,11 @@
                                    VerticalOptions="Center"
                                    HorizontalOptions="Center"/>
 
-                            <Line Grid.Row="1" Grid.ColumnSpan="7"
-                                  X1="0"
-                                  X2="25000"
-                                  Y1="0"
-                                  Y2="0"
-                                  Stroke="{AppThemeBinding Light={StaticResource Pink}, Dark={StaticResource DeepRed}}"/>
+                            <BoxView Grid.Row="1" Grid.ColumnSpan="7"
+                                     HeightRequest="1"
+                                     VerticalOptions="End"
+                                     HorizontalOptions="Fill"
+                                     Color="{AppThemeBinding Light={StaticResource Pink}, Dark={StaticResource DeepRed}}" />
                         </Grid>
                     </SwipeView>
                 </DataTemplate>

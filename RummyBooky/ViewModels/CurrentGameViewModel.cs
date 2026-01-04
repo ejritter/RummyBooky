@@ -367,7 +367,7 @@ public partial class CurrentGameViewModel(IPopupService popupService, GameServic
         var popupResults = await ShowPopupAsync(title: "Quit Game!?", message: "Are you sure you want to quit this game?", isDismissable: true);
         if (popupResults.Confirmed)
         {
-            var forfeitGame = CurrentGame.ConvertToPlayedGame(GameStatus.Forfeit, null);
+            var forfeitGame = CurrentGame.ConvertToPlayedGame(popupResults.GameState, null);
 
             await _gameService.SaveGameAsync(forfeitGame);
             await Shell.Current.GoToAsync($"///{nameof(MainPage)}");

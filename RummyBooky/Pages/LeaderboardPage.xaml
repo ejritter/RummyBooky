@@ -7,31 +7,17 @@
              xmlns:views="clr-namespace:RummyBooky.Views"
              x:Class="RummyBooky.Pages.LeaderboardPage"
              x:DataType="viewmodels:LeaderboardViewModel"
-             x:TypeArguments="viewmodels:LeaderboardViewModel"
-             >
-    <VerticalStackLayout Padding="20">
-        <Label Text="Leaderboard" FontSize="24" HorizontalOptions="Center"/>
-        <CollectionView ItemsSource="{Binding TopPlayers}">
-            <CollectionView.Header>
-                <Grid ColumnDefinitions="40,*,*,*,*,*">
-                    <Label Grid.Column="0" Text="#" />
-                    <Label Grid.Column="1" Text="Player" />
-                    <Label Grid.Column="2" Text="Score" />
-                    <Label Grid.Column="3" Text="Won" />
-                    <Label Grid.Column="4" Text="Played" />
-                    <Label Grid.Column="5" Text="High" />
-                </Grid>
-            </CollectionView.Header>
+             x:TypeArguments="viewmodels:LeaderboardViewModel">
+    <VerticalStackLayout Spacing="5">
+        <Label Style="{StaticResource TagHeader}" Text="{Binding HeaderText}" HorizontalOptions="Center"
+               />
+        <CollectionView Margin="0,30,0,0"
+                        ItemsSource="{Binding TopPlayers}"
+                        IsVisible="{Binding DisplayLeaderboard}"
+                        >
             <CollectionView.ItemTemplate>
                 <DataTemplate x:DataType="models:LeaderboardPlayerModel">
-                    <Grid ColumnDefinitions="40,*,*,*,*,*">
-                        <Label Grid.Column="0" Text="{Binding Rank}" />
-                        <Label Grid.Column="1" Text="{Binding Player.PlayerName}" />
-                        <Label Grid.Column="2" Text="{Binding Player.LifeTimeScore}" />
-                        <Label Grid.Column="3" Text="{Binding Player.GamesWon}" />
-                        <Label Grid.Column="4" Text="{Binding Player.TotalGamesPlayed}" />
-                        <Label Grid.Column="5" Text="{Binding Player.HighestScoredHand}" />
-                    </Grid>
+                    <views:PlayerCardView AssignedPlayerModel="{Binding Player}" />
                 </DataTemplate>
             </CollectionView.ItemTemplate>
         </CollectionView>

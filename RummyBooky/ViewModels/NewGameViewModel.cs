@@ -6,8 +6,11 @@ public partial class NewGameViewModel(IPopupService popupService, GameService ga
 
     private int _tapCount = 0;
 
+    [ObservableProperty]
+    public partial bool SwipeEnabled { get; set; } = false;
+
     //[ObservableProperty]
-    //public partial PlayerModel? HighlightedSuggestedPlayer { get; set; } = null;
+    //public partial AssignedPlayerModel? HighlightedSuggestedPlayer { get; set; } = null;
     [RelayCommand]
     private async Task Appearing()
     {
@@ -60,7 +63,6 @@ public partial class NewGameViewModel(IPopupService popupService, GameService ga
             return results;//can't add players at this point. Don't bother suggesting.
         await HideKeyboard();
         FilteredPlayerModelsByName.Clear();
-        //HighlightedSuggestedPlayer = null;
         if (string.IsNullOrWhiteSpace(PlayerNameText))
             return results;
         var matches = AllPlayerModels
@@ -79,6 +81,7 @@ public partial class NewGameViewModel(IPopupService popupService, GameService ga
     private void FilteredPlayerModelsByName_CollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
     {
         ShowPlayerSuggestions = FilteredPlayerModelsByName.Count > 0;
+        SwipeEnabled = FilteredPlayerModelsByName.Count > 1;
     }
 
     public string ScoreBoundaries { get; init; } = $"{IntConstants.MinimumScoreLimit} - {IntConstants.MaximumScoreLimit}";
@@ -192,25 +195,26 @@ public partial class NewGameViewModel(IPopupService popupService, GameService ga
     {
         if (Application.Current?.MainPage is Page page)
         {
-            var focusedElement = page.GetVisualTreeDescendants()
-                .OfType<Entry>()
-                .FirstOrDefault(e => e.IsFocused);
-            if (focusedElement != null)
+            var entries = page.GetVisualTreeDescendants()
+                .OfType<Entry>();
+            foreach (var focusedElement in entries)
             {
-                if (MainThread.IsMainThread)
+                if (focusedElement != null)
                 {
-                    await focusedElement.HideKeyboardAsync();
-                }
-                else
-                {
-                    await MainThread.InvokeOnMainThreadAsync(async () =>
+                    if (MainThread.IsMainThread)
                     {
                         await focusedElement.HideKeyboardAsync();
-                    });
-                }
+                    }
+                    else
+                    {
+                        await MainThread.InvokeOnMainThreadAsync(async () =>
+                        {
+                            await focusedElement.HideKeyboardAsync();
+                        });
+                    }
+                } 
             }
             return true;
-            
         }
         else
         {

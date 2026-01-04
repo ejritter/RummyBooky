@@ -8,3 +8,21 @@ public enum GameStatus
 	Won,
 	Loss
 }
+
+public enum CardRanks
+{
+	NotAssigned,
+	Ace,
+	King,
+	Queen,
+	Jack,
+	Ten,
+	Nine,
+	Eight,
+	Seven,
+	Six,
+	Five,
+	Four,
+	Three,
+	Two
+}

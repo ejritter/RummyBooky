@@ -21,5 +21,5 @@ public partial class RoundModel : BaseModel
     [ObservableProperty]
     public partial int CurrentLowestScoredHandValue { get; set; } = int.MaxValue;
 
-    public ObservableCollection<PlayerModel> PlayersScoredHandThisRound { get; set; } = new();
+    public ObservableCollection<PlayerModel> PlayersScoredHandThisRound { get; set; } = [];
 }

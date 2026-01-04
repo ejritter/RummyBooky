@@ -23,12 +23,16 @@ public partial class GeneralPopupViewModel(IPopupService popupService) : BasePop
 
         //if gamestatus is NOT won then false.
         DisplayOkayButton = CurrentGameStatus == GameStatus.Won;
-
+        //Unknown means the game is being played and this is coming from the quit game call on currentgameviewmodel.
+        DisplayQuitButton = CurrentGameStatus == GameStatus.Unknown;
         PopupResults = new PopupResultsModel();
     }
 
     [ObservableProperty]
     public partial PopupResultsModel? PopupResults{ get; set; } = null;
+
+    [ObservableProperty]
+    public partial bool DisplayQuitButton { get; set; } = false;
 
     [ObservableProperty]
     public partial bool DisplayOkayButton { get; set; } = false;
@@ -45,7 +49,13 @@ public partial class GeneralPopupViewModel(IPopupService popupService) : BasePop
 
     [ObservableProperty]
     public partial bool DisplayWinners { get; set; } = false;
-
+    [RelayCommand]
+    private async Task QuitClicked()
+    {
+        PopupResults.Confirmed = true;
+        PopupResults.GameState = GameStatus.Forfeit;
+        await _popupService.ClosePopupAsync(Shell.Current, PopupResults);
+    }
     [RelayCommand]
     private async Task OkayClicked()
     {

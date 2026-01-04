@@ -13,6 +13,8 @@
     <VerticalStackLayout Spacing="8"
                          HorizontalOptions="Center"
                          VerticalOptions="Start">
+
+       
         <Button Text="New Game"
                 Command="{Binding NewGameCommand}"
                 />

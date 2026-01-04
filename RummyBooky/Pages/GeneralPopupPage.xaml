@@ -10,12 +10,14 @@
              x:TypeArguments="viewmodels:GeneralPopupViewModel"
              BackgroundColor="{AppThemeBinding Light={x:StaticResource White}, Dark={x:StaticResource Black}}"
              >
-    <VerticalStackLayout>
+    <VerticalStackLayout Padding="5" Margin="5" Spacing="10">
         <Label Text="{Binding Title}"
+               Style="{StaticResource TagHeader}"
                HorizontalOptions="Center"
                FontSize="35"
                FontAttributes="Bold"/>
         <Label Text="{Binding Message}"
+               Style="{StaticResource TagLabelNoBackground}"
                HorizontalOptions="Center"
                FontSize="17"
                />
@@ -59,6 +61,7 @@
         </CollectionView>
         <HorizontalStackLayout HorizontalOptions="Center" Spacing="10">
             <Button IsVisible="{Binding DisplayOkayButton}" Text="Okay" Command="{Binding OkayClickedCommand}"  />
+            <Button IsVisible="{Binding DisplayQuitButton}" Text="Quit" Command="{Binding QuitClickedCommand}"  />
             <Button IsVisible="{Binding DisplayWinnerButton}" Text="Winner" Command="{Binding ConfirmWinnerCommand}"  />
             <Button IsVisible="{Binding DisplayWinners}" Text="Draw" Command="{Binding DrawGameCommand}" />
             <Button Text="Cancel" Command="{Binding CancelClickedCommand}" />

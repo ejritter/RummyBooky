@@ -54,9 +54,9 @@ public class GameService
     public async Task<bool> SetPlayersHighestScoredHandAsync(PlayerModel player)
     {
         var results = false;
-        if (int.Parse(player.PlayerScoreText) > player.HighestScoredHand)
+        if (int.TryParse(player.PlayerScoreText, out var scored) && scored > player.HighestScoredHand)
         {
-            player.HighestScoredHand = player.PlayerScore;
+            player.HighestScoredHand = scored;
         }
         results = true;
         return results;
@@ -66,9 +66,9 @@ public class GameService
     public async Task<bool> SetPlayersLowestScoredHandAsync(PlayerModel player)
     {
         var results = false;
-        if (int.Parse(player.PlayerScoreText) < player.LowestScoredHand)
+        if (int.TryParse(player.PlayerScoreText, out var scored) && scored < player.LowestScoredHand)
         {
-            player.LowestScoredHand = player.PlayerScore;
+            player.LowestScoredHand = scored;
         }
         results = true;
         return results;
@@ -158,11 +158,11 @@ public class GameService
     {
         var results = false;
         //var options = new JsonSerializerOptions
-        //{
-        //    ReferenceHandler = ReferenceHandler.Preserve,
-        //    MaxDepth = 256,
-        //    WriteIndented = true
-        //};
+        // {
+        //     ReferenceHandler = ReferenceHandler.Preserve,
+        //     MaxDepth = 256,
+        //     WriteIndented = true
+        // };
 
         //string json = JsonSerializer.Serialize(game, options);
 
@@ -183,10 +183,10 @@ public class GameService
         var activeGames = new List<CurrentGameModel>();
         //var gameFiles = Directory.GetFiles(_savedGamesFolder, "game_*.json");
         //var options = new JsonSerializerOptions
-        //{
-        //    ReferenceHandler = ReferenceHandler.Preserve,
-        //    MaxDepth = 256
-        //};
+        // {
+        //     ReferenceHandler = ReferenceHandler.Preserve,
+        //     MaxDepth = 256
+        // };
 
         foreach (var file in EnumerateGameFiles())
         {
@@ -346,7 +346,7 @@ public class GameService
 
                     if (playedGame.GameState is GameStatus.Won)
                     {
-                        agg.LifeTimeScore += player.PlayerScore;
+                        agg.LifetimeScore += player.PlayerScore;
                         if (playedGame.WinningPlayer?.ID == player.ID)
                             agg.GamesWon += 1;
                         else
@@ -358,7 +358,7 @@ public class GameService
                     {
                         //Draw. Just calculate lifetime score
                         //no one lost or won.
-                        agg.LifeTimeScore += player.PlayerScore;
+                        agg.LifetimeScore += player.PlayerScore;
                         agg.GameDraws += 1;
                         UpdatePlayerAggregateHighestLowestHands(aggregate: agg, source: player);
                     }
@@ -386,10 +386,27 @@ public class GameService
     }
     public async Task<PlayerModel[]> GetAllPlayerModelsArray()
     {
-        return _allPlayers.Values
+        // Build a global ranking map from full players dictionary
+        var rankMap = BuildRankMap();
+
+        // Return roster copies ordered by name, but annotate with global rank and symbols
+        var roster = _allPlayers.Values
             .OrderBy(p => p.PlayerName)
-            .Select(p => ToRosterPlayer(p))
+            .Select(p =>
+            {
+                var r = ToRosterPlayer(p);
+                if (rankMap.TryGetValue(p.ID, out var rnk))
+                {
+                    r.Rank = rnk;
+                    CardRanks cardRank = Enum.IsDefined(typeof(CardRanks), rnk) ? (CardRanks)rnk : CardRanks.NotAssigned;
+                    r.CardRank = cardRank;
+                    r.CardRankSymbol = RummyBooky.Converters.CardRankConverter.ConvertRankToSymbol(cardRank);
+                }
+                return r;
+            })
             .ToArray();
+
+        return roster;
     }
 
     public async Task<bool> AddExistingPlayerModelToNewGameAsync(NewGameModel gameModelTemplate, PlayerModel player)
@@ -436,7 +453,7 @@ public class GameService
         {
             var historicalPlayerModel = _allPlayers[player.ID];
             historicalPlayerModel.TotalGamesPlayed += 1;
-            historicalPlayerModel.LifeTimeScore += player.PlayerScore;
+            historicalPlayerModel.LifetimeScore += player.PlayerScore;
             if (playedGame.WinningPlayer.ID == historicalPlayerModel.ID)
                 historicalPlayerModel.GamesWon += 1;
             else
@@ -454,7 +471,7 @@ public class GameService
             ID = source.ID,
             PlayerName = source.PlayerName,
             PlayerCreatedDate = source.PlayerCreatedDate,
-            LifeTimeScore = source.LifeTimeScore,
+            LifetimeScore = source.LifetimeScore,
             TotalGamesPlayed = source.TotalGamesPlayed,
             GamesWon = source.GamesWon,
             GamesLost = source.GamesLost,
@@ -476,7 +493,7 @@ public class GameService
             ID = profile.ID,
             PlayerName = profile.PlayerName,
             PlayerCreatedDate = profile.PlayerCreatedDate,
-            LifeTimeScore = profile.LifeTimeScore,
+            LifetimeScore = profile.LifetimeScore,
             TotalGamesPlayed = profile.TotalGamesPlayed,
             GamesWon = profile.GamesWon,
             GamesLost = profile.GamesLost,
@@ -505,12 +522,51 @@ public class GameService
 
     public async Task<List<PlayerModel>> GetTopPlayersAsync(int count = 10)
     {
-        return _allPlayers.Values
-            .OrderByDescending(p => p.LifeTimeScore)
+        // Build rank map from the full players collection
+        var rankMap = BuildRankMap();
+
+        // Get the top players by score and return roster copies annotated with rank info
+        var top = _allPlayers.Values
+            .OrderByDescending(p => p.LifetimeScore)
             .ThenByDescending(p => p.GamesWon)
             .ThenBy(p => p.PlayerName)
             .Take(count)
-            .Select(p => ToRosterPlayer(p))
-            .ToList();         
+            .Select(p =>
+            {
+                var r = ToRosterPlayer(p);
+                if (rankMap.TryGetValue(p.ID, out var rnk))
+                {
+                    r.Rank = rnk;
+                    CardRanks cardRank = Enum.IsDefined(typeof(CardRanks), rnk) ? (CardRanks)rnk : CardRanks.NotAssigned;
+                    r.CardRank = cardRank;
+                    r.CardRankSymbol = RummyBooky.Converters.CardRankConverter.ConvertRankToSymbol(cardRank);
+                }
+                return r;
+            })
+            .ToList();
+
+        return top;
+    }
+
+    /// <summary>
+    /// Builds a ranking map from player ID -> rank (1 = highest lifetime score)
+    /// </summary>
+    /// <returns></returns>
+    private Dictionary<Guid, int> BuildRankMap()
+    {
+        var map = new Dictionary<Guid, int>();
+        var ordered = _allPlayers.Values
+            .OrderByDescending(p => p.LifetimeScore)
+            .ThenByDescending(p => p.GamesWon)
+            .ThenBy(p => p.PlayerName)
+            .ToList();
+
+        int rank = 1;
+        foreach (var p in ordered)
+        {
+            map[p.ID] = rank++;
+        }
+
+        return map;
     }
 }

@@ -2,6 +2,15 @@
 
 public partial class PlayerModel : BaseModel
 {
+
+    public PlayerModel()
+    {
+        ImageSource = 
+            CurrentTheme == AppTheme.Dark ? "spade_pink.png" : "spade_deepred.png";
+    }
+    [ObservableProperty]
+    public partial int Rank { get; set; } = 0;
+
     [ObservableProperty]
     public partial string PlayerName { get; set; } = string.Empty;
 
@@ -16,7 +25,7 @@ public partial class PlayerModel : BaseModel
     public Guid ID { get; init; } = Guid.NewGuid();
 
     [ObservableProperty]
-    public partial double LifeTimeScore { get; set; } = 0;
+    public partial double LifetimeScore { get; set; } = 0;
 
     [ObservableProperty]
     public partial  double TotalGamesPlayed { get; set; } = 0;
@@ -34,11 +43,20 @@ public partial class PlayerModel : BaseModel
     public partial double GameDraws { get; set; } = 0;
 
     [ObservableProperty]
-    public partial int HighestScoredHand { get; set; } = 0;
+    public partial int HighestScoredHand { get; set; } = int.MinValue;
 
     [ObservableProperty]
-    public partial int LowestScoredHand { get; set; } = 0;
+    public partial int LowestScoredHand { get; set; } = int.MaxValue;
 
     [ObservableProperty]
     public partial bool IsDealer { get; set; } = false;
+
+    [ObservableProperty]
+    public partial string ImageSource { get; set; } = "";
+
+   [ObservableProperty]
+    public partial CardRanks CardRank { get; set; } = CardRanks.NotAssigned;
+
+    [ObservableProperty]
+    public partial string CardRankSymbol { get; set; } = string.Empty;
 }
