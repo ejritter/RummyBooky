@@ -34,12 +34,12 @@
                 Command="{Binding QuitGameCommand}"
                 />
 
-        <Grid ColumnSpacing="0"
+        <!--<Grid ColumnSpacing="0"
               ColumnDefinitions="*,95,115"
               RowDefinitions="100,*"
               >
             <Label Grid.Row="0" Grid.Column="0" Text=""/>
-            <!--Just blank -->
+            --><!--Just blank --><!--
             <BoxView Grid.RowSpan="2"
                      Grid.Column="0"
                      WidthRequest="1"
@@ -64,10 +64,31 @@
                   Y1="0"
                   Y2="0"
                   Stroke="{AppThemeBinding Light={StaticResource Pink}, Dark={StaticResource DeepRed}}"/>
-        </Grid>
+        </Grid>-->
         <CollectionView ItemsSource="{Binding CurrentGame.Players}"
                         SelectionMode="Single"
                         >
+            <CollectionView.Header>
+                <Grid x:Name="ItemRoot"
+                      ColumnSpacing="0"
+                      ColumnDefinitions="*,2,95,2,115"
+                      RowDefinitions="*,*">
+                    
+                    <BoxView Grid.Column="1"
+                         Grid.ColumnSpan="5"
+                         BackgroundColor="{AppThemeBinding Light={x:StaticResource Pink}, Dark={x:StaticResource DeepRed}}"    
+                         VerticalOptions="Fill"
+                         />
+                    <Label Grid.Row="0" Grid.Column="2"
+                           Text="Total Score"
+                           Style="{StaticResource TagLabel}" />
+
+                    <Label Grid.Row="0" Grid.Column="4"
+                           Text="Round Score"
+                           Style="{StaticResource TagLabel}" />
+
+                </Grid>
+            </CollectionView.Header>
             <CollectionView.ItemTemplate>
                 <DataTemplate x:DataType="models:PlayerModel">
                     <SwipeView>
@@ -112,11 +133,11 @@
                                 </MenuFlyout>
                             </FlyoutBase.ContextFlyout>
                             <Image Grid.Row="0" Grid.Column="0"
-                               VerticalOptions="Center"
-                               HorizontalOptions="Start"
-                               IsVisible="{Binding IsDealer}"
-                               Style="{StaticResource DealerImage}"
-                               />
+                                   VerticalOptions="Center"
+                                   HorizontalOptions="Start"
+                                   IsVisible="{Binding IsDealer}"
+                                   Style="{StaticResource DealerImage}"
+                                   />
                         <Label Grid.Row="0" Grid.Column="0"
                                Text="{Binding PlayerName}"
                                Style="{StaticResource PlayerLabel}"
@@ -151,13 +172,11 @@
                                VerticalOptions="Start"
                                FontSize="15"
                                Keyboard="Numeric"/><!-- Round Score -->
-
-                        <Line Grid.Row="1" Grid.ColumnSpan="5"
-                              X1="0"
-                              X2="25000"
-                              Y1="0"
-                              Y2="0"
-                              Stroke="{AppThemeBinding Light={StaticResource Pink}, Dark={StaticResource DeepRed}}"/>
+                            <BoxView Grid.Row="1" Grid.ColumnSpan="5"
+                                 Color="{AppThemeBinding Light={StaticResource Pink}, Dark={StaticResource DeepRed}}"
+                                 HeightRequest="1"
+                                 
+                                 />
                
                     </Grid>
                     </SwipeView>

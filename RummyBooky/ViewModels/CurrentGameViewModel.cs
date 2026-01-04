@@ -364,7 +364,9 @@ public partial class CurrentGameViewModel(IPopupService popupService, GameServic
     [RelayCommand]
     private async Task<bool> QuitGame()
     {
-        var popupResults = await ShowPopupAsync(title: "Quit Game!?", message: "Are you sure you want to quit this game?", isDismissable: true);
+        var title = "Quit Game!?";
+        var message = "Are you sure you want to quit? This will mark the game as Forfeit and no points will be counted. No hand highest or lowest ranking will be set.";
+        var popupResults = await ShowPopupAsync(title: title, message: message, isDismissable: true);
         if (popupResults.Confirmed)
         {
             var forfeitGame = CurrentGame.ConvertToPlayedGame(popupResults.GameState, null);

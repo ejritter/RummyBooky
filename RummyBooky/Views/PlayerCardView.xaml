@@ -11,7 +11,7 @@
     <Border Background="{AppThemeBinding Light={StaticResource White}, Dark={StaticResource Black}}"
             StrokeShape="RoundRectangle 20"
             Padding="15"
-            HeightRequest="460"
+            HeightRequest="480"
             WidthRequest="340"
             >
         <Border StrokeShape="RoundRectangle 20"
@@ -20,7 +20,7 @@
                 >
             <VerticalStackLayout>
             <!-- Header -->
-                <Grid RowDefinitions="Auto" ColumnDefinitions="8,*" Margin="10,0,0,0">
+                <Grid RowDefinitions="Auto" ColumnDefinitions="8,*" Margin="10,0,20,20">
                     <!-- Left: Rank symbol and suit image stacked vertically -->
                     <VerticalStackLayout Grid.Column="0" HorizontalOptions="Start" VerticalOptions="Start">
                         <Label Text="{Binding CardRankSymbol}"
@@ -36,12 +36,14 @@
                     <!-- Right: Player name -->
                     <Border Padding="50,0"
                             Margin="5,0,0,0"
-                            StrokeShape="RoundRectangle 8"
+                            StrokeShape="RoundRectangle 20"
                             Background="{AppThemeBinding Light={StaticResource Pink}, Dark={StaticResource DeepRed}}"
                             Grid.Column="1"
-                            VerticalOptions="Center"
+                            VerticalOptions="Fill"
                             HorizontalOptions="Center">
-                        <Label Text="{Binding PlayerName}"
+                        
+                        <Label Style="{StaticResource PlayerLabel}"
+                               Text="{Binding PlayerName}"
                                HorizontalOptions="Center"
                                VerticalOptions="Center"
                                TextColor="{AppThemeBinding Light={StaticResource Black}, Dark={StaticResource White}}"/>
