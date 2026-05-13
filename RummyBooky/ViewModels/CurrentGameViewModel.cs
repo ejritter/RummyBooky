@@ -95,35 +95,38 @@ public partial class CurrentGameViewModel(IPopupService popupService, GameServic
                 if (!popupResults.Confirmed)
                 {
                     // ROLLBACK all mutations
-                    foreach (var snap in playerSnapshots)
+                    await MainThread.InvokeOnMainThreadAsync(() =>
                     {
-                        snap.Player.PlayerScore = snap.Score;
-                        snap.Player.PlayerScoreText = snap.ScoreText;
-                        snap.Player.HighestScoredHand = snap.Highest;
-                        snap.Player.LowestScoredHand = snap.Lowest;
-                    }
+                        foreach (var snap in playerSnapshots)
+                        {
+                            snap.Player.PlayerScore = snap.Score;
+                            snap.Player.PlayerScoreText = snap.ScoreText;
+                            snap.Player.HighestScoredHand = snap.Highest;
+                            snap.Player.LowestScoredHand = snap.Lowest;
+                        }
 
-                    CurrentRound.LeadingPlayer = roundSnapshot.Leading;
-                    CurrentRound.PlayerHighestScoringHand = roundSnapshot.HighestPlayer;
-                    CurrentRound.CurrentHighestScoredHandValue = roundSnapshot.HighestValue;
-                    CurrentRound.PlayerLowestScoringHand = roundSnapshot.LowestPlayer;
-                    CurrentRound.CurrentLowestScoredHandValue = roundSnapshot.LowestValue;
+                        CurrentRound.LeadingPlayer = roundSnapshot.Leading;
+                        CurrentRound.PlayerHighestScoringHand = roundSnapshot.HighestPlayer;
+                        CurrentRound.CurrentHighestScoredHandValue = roundSnapshot.HighestValue;
+                        CurrentRound.PlayerLowestScoringHand = roundSnapshot.LowestPlayer;
+                        CurrentRound.CurrentLowestScoredHandValue = roundSnapshot.LowestValue;
 
-                    CurrentRound.PlayersScoredHandThisRound.Clear();
-                    foreach (var p in roundSnapshot.ScoredPlayers)
-                    {
-                        CurrentRound.PlayersScoredHandThisRound.Add(p);
-                    }
+                        CurrentRound.PlayersScoredHandThisRound.Clear();
+                        foreach (var p in roundSnapshot.ScoredPlayers)
+                        {
+                            CurrentRound.PlayersScoredHandThisRound.Add(p);
+                        }
 
-                    // Reorder back to appropriate display after rollback
-                    ReorderPlayersForDisplay();
+                        // Reorder back to appropriate display after rollback
+                        ReorderPlayersForDisplay();
+                    });
 
                     // Do NOT create next round, do NOT save
                     return false;
                 }
 
                 // Reorder for display (Round > 1 typically by score)
-                ReorderPlayersForDisplay();
+                await MainThread.InvokeOnMainThreadAsync(ReorderPlayersForDisplay);
 
                 // User confirmed winner: you might mark game finished and save here
 

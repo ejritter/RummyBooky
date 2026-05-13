@@ -33,38 +33,6 @@
                 HorizontalOptions="End"
                 Command="{Binding QuitGameCommand}"
                 />
-
-        <!--<Grid ColumnSpacing="0"
-              ColumnDefinitions="*,95,115"
-              RowDefinitions="100,*"
-              >
-            <Label Grid.Row="0" Grid.Column="0" Text=""/>
-            --><!--Just blank --><!--
-            <BoxView Grid.RowSpan="2"
-                     Grid.Column="0"
-                     WidthRequest="1"
-                     HorizontalOptions="End"
-                     VerticalOptions="Fill"
-                     Color="{AppThemeBinding Light={StaticResource Pink}, Dark={StaticResource DeepRed}}" />
-            <Label Grid.Row="0" Grid.Column="1"
-                Text="Total Score"
-                Style="{StaticResource TagLabel}"/>
-            <BoxView Grid.RowSpan="2"
-                     Grid.Column="1"
-                     WidthRequest="1"
-                     HorizontalOptions="End"
-                     VerticalOptions="Fill"
-                     Color="{AppThemeBinding Light={StaticResource Pink}, Dark={StaticResource DeepRed}}" />
-            <Label Grid.Row="0" Grid.Column="2"
-                Text="Round Score"
-                Style="{StaticResource TagLabel}"/>
-            <Line Grid.Row="1" Grid.ColumnSpan="3"
-                  X1="0"
-                  X2="25000"
-                  Y1="0"
-                  Y2="0"
-                  Stroke="{AppThemeBinding Light={StaticResource Pink}, Dark={StaticResource DeepRed}}"/>
-        </Grid>-->
         <CollectionView ItemsSource="{Binding CurrentGame.Players}"
                         SelectionMode="Single"
                         >
@@ -175,17 +143,14 @@
                             <BoxView Grid.Row="1" Grid.ColumnSpan="5"
                                  Color="{AppThemeBinding Light={StaticResource Pink}, Dark={StaticResource DeepRed}}"
                                  HeightRequest="1"
-                                 
                                  />
-               
-                    </Grid>
+                        </Grid>
                     </SwipeView>
                 </DataTemplate>
             </CollectionView.ItemTemplate>
         </CollectionView>
         <Button Text="Calculate Scores"
                 Command="{Binding CalculatePlayerScoresCommand}"
-                CommandParameter="{Binding Source={x:Reference PlayerScoreEntry}}"
                 />
         <VerticalStackLayout>
             <Label Style="{StaticResource PlayerLabel}"

@@ -14,7 +14,12 @@ public abstract class BaseViewModel(IPopupService popupService, GameService game
         AppTheme.Dark => AppTheme.Dark,
         _ => AppTheme.Dark
     };
-    public virtual async Task<PopupResultsModel> ShowPopupAsync(string title, string message, bool isDismissable = true, List<PlayerModel>? players = null, GameStatus? gameStatus = GameStatus.Unknown)
+    public virtual async Task<PopupResultsModel> ShowPopupAsync
+        (string title, 
+        string message, 
+        bool isDismissable = true, 
+        List<PlayerModel>? players = null, 
+        GameStatus? gameStatus = GameStatus.Unknown)
     {
         var queryAttributes = new Dictionary<string, object>
         {

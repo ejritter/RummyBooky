@@ -147,11 +147,11 @@ public class GameService
         return results;
     }
 
-    public async Task<bool> SetCurrentGameStatusAsync(CurrentGameModel currentGame)
-    {
-        var results = false;
-        return results;
-    }
+    //public async Task<bool> SetCurrentGameStatusAsync(CurrentGameModel currentGame)
+    //{
+    //    var results = false;
+    //    return results;
+    //}
 
 
     public async Task<bool> SaveGameAsync(GameModel game)
@@ -316,7 +316,8 @@ public class GameService
         return true;
     }
 
-    public async Task<bool> LoadAllPlayersAsync()
+
+    public async Task<bool> LoadAllPlayersDictionaryAsync()
     {
         var results = false;
         _allPlayers = new Dictionary<Guid, PlayerModel>();
@@ -503,7 +504,7 @@ public class GameService
             LowestScoredHand = 0,
             PlayerScore = 0,
             PlayerScoreText = string.Empty,
-            IsDealer = false
+            IsDealer = profile.IsDealer
         };
     }
 
@@ -568,5 +569,275 @@ public class GameService
         }
 
         return map;
+    }
+
+    public async Task<bool> RemovePlayerFromHistory(PlayerModel removePlayer)
+    {
+        var results = false;
+        var gameFiles = EnumerateGameFiles().ToList();
+
+        foreach (var filePath in gameFiles)
+        {
+            var gameJson = await File.ReadAllTextAsync(filePath);
+            var game = JsonSerializer.Deserialize<GameModel>(gameJson);
+
+            if (game is null)
+                continue;
+
+            var changed = RemovePlayerReferencesFromGame(game, removePlayer.ID);
+            if (!changed)
+                continue;
+
+            // If the game is no longer valid, remove it entirely.
+            if (game.Players.Count < IntConstants.MinimumPlayerCount)
+            {
+                File.Delete(filePath);
+                results = true;
+                continue;
+            }
+
+            if (game is PlayedGameModel playedGame)
+            {
+                var rebuiltPlayedGame = RebuildPlayedGameAfterPlayerRemoval(playedGame);
+
+                // No remaining valid outcome for this historical game.
+                if (rebuiltPlayedGame is null)
+                {
+                    File.Delete(filePath);
+                    results = true;
+                    continue;
+                }
+
+                await SaveGameAsync(rebuiltPlayedGame);
+            }
+            else
+            {
+                EnsureSingleDealer(game);
+                await SaveGameAsync(game);
+            }
+
+            results = true;
+        }
+
+        if (results)
+        {
+            await LoadAllPlayersDictionaryAsync();
+        }
+
+        return results;
+    }
+
+    private static bool RemovePlayerReferencesFromGame(GameModel game, Guid playerId)
+    {
+        var changed = false;
+
+        var playerInGame = game.Players.FirstOrDefault(p => p.ID == playerId);
+        if (playerInGame is not null)
+        {
+            game.Players.Remove(playerInGame);
+            changed = true;
+        }
+
+        foreach (var round in game.Round)
+        {
+            if (RemovePlayerReferencesFromRound(round, playerId))
+            {
+                changed = true;
+            }
+        }
+
+        return changed;
+    }
+
+    private static bool RenamePlayerReferencesInGame(GameModel game, Guid playerId, string newName)
+    {
+        var changed = false;
+
+        var playerInGame = game.Players.FirstOrDefault(p => p.ID == playerId);
+        if (playerInGame is not null)
+        {
+            playerInGame.PlayerName = newName;
+            changed = true;
+        }
+
+        foreach (var round in game.Round)
+        {
+            if (RenamePlayerReferencesInRound(round, playerId, newName))
+            {
+                changed = true;
+            }
+        }
+
+        return changed;
+    }
+
+    private static bool RenamePlayerReferencesInRound(RoundModel round, Guid playerId, string newName)
+    {
+        var changed = false;
+
+        // Update any entries in the players-scored collection
+        for (int i = 0; i < round.PlayersScoredHandThisRound.Count; i++)
+        {
+            var player = round.PlayersScoredHandThisRound[i];
+            if (player.ID == playerId && player.PlayerName != newName)
+            {
+                player.PlayerName = newName;
+                changed = true;
+            }
+        }
+
+        // Update LeadingPlayer if it's the same logical player (may be a separate instance after deserialization)
+        if (round.LeadingPlayer?.ID == playerId && round.LeadingPlayer.PlayerName != newName)
+        {
+            round.LeadingPlayer.PlayerName = newName;
+            changed = true;
+        }
+
+        // Update highest/lowest round references similarly
+        if (round.PlayerHighestScoringHand?.ID == playerId && round.PlayerHighestScoringHand.PlayerName != newName)
+        {
+            round.PlayerHighestScoringHand.PlayerName = newName;
+            changed = true;
+        }
+
+        if (round.PlayerLowestScoringHand?.ID == playerId && round.PlayerLowestScoringHand.PlayerName != newName)
+        {
+            round.PlayerLowestScoringHand.PlayerName = newName;
+            changed = true;
+        }
+
+        return changed;
+    }
+    private static bool RemovePlayerReferencesFromRound(RoundModel round, Guid playerId)
+    {
+        var changed = false;
+
+        for (int i = round.PlayersScoredHandThisRound.Count - 1; i >= 0; i--)
+        {
+            if (round.PlayersScoredHandThisRound[i].ID == playerId)
+            {
+                round.PlayersScoredHandThisRound.RemoveAt(i);
+                changed = true;
+            }
+        }
+
+        if (round.LeadingPlayer?.ID == playerId)
+        {
+            round.LeadingPlayer = null;
+            changed = true;
+        }
+
+        if (round.PlayerHighestScoringHand?.ID == playerId)
+        {
+            round.PlayerHighestScoringHand = null;
+            round.CurrentHighestScoredHandValue = int.MinValue;
+            changed = true;
+        }
+
+        if (round.PlayerLowestScoringHand?.ID == playerId)
+        {
+            round.PlayerLowestScoringHand = null;
+            round.CurrentLowestScoredHandValue = int.MaxValue;
+            changed = true;
+        }
+
+        return changed;
+    }
+
+
+    public async Task<bool> UpdatePlayerNameHistory(PlayerModel renamePlayer, string newName)
+    {
+        var results = false;
+        var gameFiles = EnumerateGameFiles().ToList();
+
+        foreach (var filePath in gameFiles)
+        {
+            var gameJson = await File.ReadAllTextAsync(filePath);
+            var game = JsonSerializer.Deserialize<GameModel>(gameJson);
+
+            if (game is null)
+                continue;
+
+            var changed = RenamePlayerReferencesInGame(game, renamePlayer.ID, newName);
+            if (!changed)
+                continue;
+
+
+            results = await SaveGameAsync(game);
+        }
+
+        if (results)
+        {
+            await LoadAllPlayersDictionaryAsync();
+        }
+
+        return results;
+    }
+    private static void EnsureSingleDealer(GameModel game)
+    {
+        var dealers = game.Players.Where(p => p.IsDealer).ToList();
+        if (dealers.Count == 1)
+            return;
+
+        foreach (var player in game.Players)
+        {
+            player.IsDealer = false;
+        }
+
+        if (game.Players.Count > 0)
+        {
+            game.Players[0].IsDealer = true;
+        }
+    }
+
+    private static PlayedGameModel? RebuildPlayedGameAfterPlayerRemoval(PlayedGameModel playedGame)
+    {
+        if (playedGame.Players.Count < IntConstants.MinimumPlayerCount)
+            return null;
+
+        if (playedGame.GameState is GameStatus.Forfeit)
+        {
+            return CreatePlayedGameCopy(
+                playedGame,
+                GameStatus.Forfeit,
+                null);
+        }
+
+        var winners = playedGame
+            .Players
+            .Where(player => player.PlayerScore >= playedGame.ScoreLimit)
+            .OrderByDescending(player => player.PlayerScore)
+            .ToList();
+
+        // After removing the player, the saved historical result no longer makes sense.
+        if (winners.Count == 0)
+            return null;
+
+        var highestScore = winners.Max(player => player.PlayerScore);
+        winners = winners.Where(player => player.PlayerScore == highestScore).ToList();
+
+        return winners.Count > 1
+            ? CreatePlayedGameCopy(playedGame, GameStatus.Draw, null)
+            : CreatePlayedGameCopy(playedGame, GameStatus.Won, winners[0]);
+    }
+
+    private static PlayedGameModel CreatePlayedGameCopy(
+        PlayedGameModel source,
+        GameStatus gameState,
+        PlayerModel? winningPlayer)
+    {
+        return new PlayedGameModel
+        {
+            GameId = source.GameId,
+            Players = source.Players,
+            IsGameActive = false,
+            IsGameFinished = true,
+            Round = source.Round,
+            GameEnd = source.GameEnd,
+            GameStart = source.GameStart,
+            ScoreLimit = source.ScoreLimit,
+            GameState = gameState,
+            WinningPlayer = winningPlayer
+        };
     }
 }

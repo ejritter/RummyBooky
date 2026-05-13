@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<pages:BasePage x:Name="thisPage" 
+                xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+                xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+                xmlns:pages="clr-namespace:RummyBooky.Pages"
+                xmlns:viewmodels="clr-namespace:RummyBooky.ViewModels"
+                xmlns:models="clr-namespace:RummyBooky.Models"
+                xmlns:views="clr-namespace:RummyBooky.Views"
+                x:Class="RummyBooky.Pages.EditPlayerPage"
+                x:DataType="viewmodels:EditPlayerViewModel"
+                x:TypeArguments="viewmodels:EditPlayerViewModel"
+                Loaded="Page_Loaded"
+                >
+    <VerticalStackLayout>
+        <Grid x:Name="GamesGrid"
+              ColumnDefinitions="*"  
+              RowDefinitions="*,50,*,*">
+            <views:PlayerCardView Grid.Row="0"
+                                  x:Name="PlayerCard"
+                                  AssignedPlayerModel="{Binding CurrentPlayer}"/>
+            <VerticalStackLayout Grid.Row="1" 
+                                 HorizontalOptions="Center"
+                                 MaximumWidthRequest="{Binding Source={x:Reference PlayerCard}, Path=Width}">
+                <Entry 
+                   Text="{Binding NewPlayerNameText}"
+                   HorizontalOptions="Center"
+                   Placeholder="Enter new name:"/>
+                <Button 
+                    Text="Remove Player"
+                    Command="{Binding RemovePlayerCommand}"
+                    />
+            </VerticalStackLayout>
+            <CollectionView Grid.Row="2"
+                            ItemsSource="{Binding PlayedGames}">
+                
+            </CollectionView>
+            <CollectionView Grid.Row="3"
+                            ItemsSource="{Binding ActiveGames}"></CollectionView>
+            
+        </Grid>
+        <Grid x:Name="PlayersGrid"></Grid>
+    </VerticalStackLayout>
+</pages:BasePage>

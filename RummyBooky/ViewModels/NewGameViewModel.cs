@@ -4,13 +4,25 @@ public partial class NewGameViewModel(IPopupService popupService, GameService ga
         : BaseViewModel(popupService, gameService)
 {
 
-    private int _tapCount = 0;
-
+    
     [ObservableProperty]
     public partial bool SwipeEnabled { get; set; } = false;
 
     //[ObservableProperty]
     //public partial AssignedPlayerModel? HighlightedSuggestedPlayer { get; set; } = null;
+
+    [ObservableProperty] 
+    public partial PlayerModel[] AllPlayerModels { get; set; } = [];
+
+    public  ObservableCollection<PlayerModel> FilteredPlayerModelsByName { get; set; } = [];
+
+    [ObservableProperty]
+    public partial PlayerModel? SelectedSuggestedPlayerModel { get; set; } = null;
+    
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(ShowGridTemplate))]
+    public partial bool ShowPlayerSuggestions { get; set; } = false;
+
     [RelayCommand]
     private async Task Appearing()
     {
@@ -20,26 +32,17 @@ public partial class NewGameViewModel(IPopupService popupService, GameService ga
         FilteredPlayerModelsByName.CollectionChanged += FilteredPlayerModelsByName_CollectionChanged;
     }
 
+    
+
     [RelayCommand]
     private async Task Disappearing()
     {
         GameModelTemplate.Players.CollectionChanged -= Players_CollectionChanged;
         FilteredPlayerModelsByName.CollectionChanged -= FilteredPlayerModelsByName_CollectionChanged;
+        FilteredPlayerModelsByName.Clear();
+        SelectedSuggestedPlayerModel = null;
+        ShowPlayerSuggestions = false;
     }
-
-    [ObservableProperty] 
-    public partial PlayerModel[] AllPlayerModels { get; set; } = [];
-
-    public ObservableCollection<PlayerModel> FilteredPlayerModelsByName { get; set; } = [];
-
-
-    [ObservableProperty]
-    public partial PlayerModel? SelectedSuggestedPlayerModel { get; set; } = null;
-    
-    [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(ShowGridTemplate))]
-    public partial bool ShowPlayerSuggestions { get; set; } = false;
-
     partial void OnShowPlayerSuggestionsChanged(bool oldValue, bool newValue)
     {
         if (newValue == true)
@@ -56,32 +59,62 @@ public partial class NewGameViewModel(IPopupService popupService, GameService ga
     }
 
     [RelayCommand]
-    private async Task<bool> UserStoppedTyping()
+    private async Task EditPlayer(object? sender)
     {
-        var results = false;
+        if (sender is PlayerModel playerModel)
+        {
+            await Shell.Current.GoToAsync(nameof(EditPlayerPage), animate: true, parameters: new Dictionary<string, object>
+            {
+                [nameof(EditPlayerViewModel.CurrentPlayer)] = playerModel
+            });
+        }
+
+    }
+
+    [RelayCommand]
+    public async Task UserStoppedTyping()
+    {
         if (GameModelTemplate.Players.Count >= IntConstants.MaximumPlayerCount)
-            return results;//can't add players at this point. Don't bother suggesting.
-        await HideKeyboard();
+            return;
+
+        SelectedSuggestedPlayerModel = null;
         FilteredPlayerModelsByName.Clear();
+
         if (string.IsNullOrWhiteSpace(PlayerNameText))
-            return results;
+            return;
+
         var matches = AllPlayerModels
-                        //Grab by name
             .Where(p => p.PlayerName.StartsWith(PlayerNameText, StringComparison.OrdinalIgnoreCase) &&
-                        //now whether or not that model is already in the Players collection
-                        //if not, return it.
                         GameModelTemplate.Players.Any(gp => gp.ID == p.ID) == false)
-            
-            .ToList<PlayerModel>();
-        foreach (var player in matches)
-            FilteredPlayerModelsByName.Add(player);
-        return results;
+            .ToList();
+
+        if (MainThread.IsMainThread)
+        {
+            foreach (var player in matches)
+                FilteredPlayerModelsByName.Add(player);
+        }
+        else
+        {
+            await MainThread.InvokeOnMainThreadAsync(() =>
+            {
+                foreach (var player in matches)
+                    FilteredPlayerModelsByName.Add(player);
+            });
+        }
+
+        SelectedSuggestedPlayerModel = FilteredPlayerModelsByName.FirstOrDefault();
     }
 
     private void FilteredPlayerModelsByName_CollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
     {
         ShowPlayerSuggestions = FilteredPlayerModelsByName.Count > 0;
         SwipeEnabled = FilteredPlayerModelsByName.Count > 1;
+
+        if (SelectedSuggestedPlayerModel is not null &&
+            FilteredPlayerModelsByName.Contains(SelectedSuggestedPlayerModel) == false)
+        {
+            SelectedSuggestedPlayerModel = FilteredPlayerModelsByName.FirstOrDefault();
+        }
     }
 
     public string ScoreBoundaries { get; init; } = $"{IntConstants.MinimumScoreLimit} - {IntConstants.MaximumScoreLimit}";
@@ -103,7 +136,12 @@ public partial class NewGameViewModel(IPopupService popupService, GameService ga
 
     partial void OnPlayerNameTextChanged(string value)
     {
+        SelectedSuggestedPlayerModel = null;
+        FilteredPlayerModelsByName.Clear();
+        ShowPlayerSuggestions = false;
+        SwipeEnabled = false;
         CanAddPlayer();
+        AddPlayerCommand.NotifyCanExecuteChanged();
     }
     partial void OnScoreLimitTextChanged(string value)
     {
@@ -153,7 +191,7 @@ public partial class NewGameViewModel(IPopupService popupService, GameService ga
         var results = await _gameService.AddExistingPlayerModelToNewGameAsync(GameModelTemplate, SelectedSuggestedPlayerModel);
         PlayerNameText = string.Empty;
         FilteredPlayerModelsByName.Clear();
-        //HighlightedSuggestedPlayer = null;
+        SelectedSuggestedPlayerModel = null;
         CanStartGame();
         if (GameModelTemplate.Players.Count == IntConstants.MaximumPlayerCount)
         {

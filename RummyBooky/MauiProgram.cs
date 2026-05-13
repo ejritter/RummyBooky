@@ -1,5 +1,4 @@
-﻿using FilePath = System.IO.Path;
-namespace RummyBooky;
+﻿namespace RummyBooky;
 
 public static class MauiProgram
 {
@@ -14,11 +13,6 @@ public static class MauiProgram
                 fonts.AddFont("OpenSans-Regular.ttf", "OpenSansRegular");
                 fonts.AddFont("OpenSans-Semibold.ttf", "OpenSansSemibold");
             });
-        IServiceCollection services = builder.Services;
-        services.AddSerilog(
-            new LoggerConfiguration()
-                .WriteTo.File(FilePath.Combine(FileSystem.Current.AppDataDirectory, "RummyBookyLog.log"), rollingInterval: RollingInterval.Day)
-                .CreateLogger());
 
         builder.Services.AddSingleton(AudioManager.Current);
         builder.Services.AddSingleton<IAppAudioService, AppAudioService>();
@@ -32,9 +26,12 @@ public static class MauiProgram
         builder.Services.AddSingleton<NewGamePage>();
         builder.Services.AddSingleton<LeaderboardViewModel>();
         builder.Services.AddSingleton<LeaderboardPage>();
+        
+        builder.Services.AddTransient<EditPlayerViewModel>();
+        builder.Services.AddTransient<EditPlayerPage>();
         builder.Services.AddTransient<CurrentGamePage>();
         builder.Services.AddTransient<CurrentGameViewModel>();
-
+        
         return builder.Build();
     }
 }

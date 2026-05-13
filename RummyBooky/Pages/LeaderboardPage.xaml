@@ -20,7 +20,8 @@
                         IsVisible="{Binding DisplayLeaderboard}">
             <CollectionView.ItemTemplate>
                 <DataTemplate x:DataType="models:LeaderboardPlayerModel">
-                    <views:PlayerCardView AssignedPlayerModel="{Binding Player}" />
+                    <views:PlayerCardView AssignedPlayerModel="{Binding Player}"
+                                          Command="{Binding Source={RelativeSource AncestorType={x:Type viewmodels:LeaderboardViewModel}}, Path=EditPlayerCommand}" />
                 </DataTemplate>
             </CollectionView.ItemTemplate>
         </CollectionView>

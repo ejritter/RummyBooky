@@ -8,6 +8,7 @@ public partial class App : Application
         _appAudioService = appAudioService;
         
     }
+    private readonly IAppAudioService _appAudioService;
     private readonly bool _debugging = true;
     protected override Window CreateWindow(IActivationState? activationState)
     {
@@ -38,5 +39,4 @@ public partial class App : Application
             _appAudioService.Resume();
         base.OnResume();
     }
-    private readonly IAppAudioService _appAudioService;
 }

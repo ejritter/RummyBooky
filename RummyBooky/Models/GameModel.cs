@@ -12,7 +12,7 @@ public abstract partial class GameModel : BaseModel
     public ObservableCollection<PlayerModel> Players { get; set; } = new();
     [ObservableProperty]
     public  partial bool IsGameActive { get; set; } = true;
-   [ObservableProperty] 
+    [ObservableProperty] 
     public partial bool IsGameFinished { get; set; } = false;
     public ObservableCollection<RoundModel> Round { get; set; } = new();
 }

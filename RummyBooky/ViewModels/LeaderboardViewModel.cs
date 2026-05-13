@@ -14,6 +14,19 @@ public partial class LeaderboardViewModel(IPopupService popupService, GameServic
     [ObservableProperty]
     public partial bool DisplayLeaderboard { get; set; } = false;
 
+
+    [RelayCommand]
+    private async Task EditPlayer(object? sender)
+    {
+        if (sender is PlayerModel playerModel)
+        {
+            await Shell.Current.GoToAsync(nameof(EditPlayerPage), animate: true, parameters: new Dictionary<string, object>
+            {
+                [nameof(EditPlayerViewModel.CurrentPlayer)] = playerModel
+            });
+        }
+
+    }
     [RelayCommand]
     private async Task Appearing()
     {

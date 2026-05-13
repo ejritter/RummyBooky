@@ -7,12 +7,12 @@
              xmlns:views="clr-namespace:RummyBooky.Views"
              x:Class="RummyBooky.Views.PlayerCardView"
              x:DataType="models:PlayerModel"
+             x:Name="This"
              >
-    <Border Background="{AppThemeBinding Light={StaticResource White}, Dark={StaticResource Black}}"
+    <Border x:Name="CardBorder"
+            Background="{AppThemeBinding Light={StaticResource White}, Dark={StaticResource Black}}"
             StrokeShape="RoundRectangle 20"
             Padding="15"
-            HeightRequest="480"
-            WidthRequest="340"
             >
         <Border StrokeShape="RoundRectangle 20"
                 Padding="10"
@@ -34,20 +34,28 @@
                     </VerticalStackLayout>
 
                     <!-- Right: Player name -->
-                    <Border Padding="50,0"
+                    <HorizontalStackLayout Grid.Column="1"
+                                           HorizontalOptions="Center">
+                        <Border Padding="50,0"
                             Margin="5,0,0,0"
                             StrokeShape="RoundRectangle 20"
                             Background="{AppThemeBinding Light={StaticResource Pink}, Dark={StaticResource DeepRed}}"
-                            Grid.Column="1"
+                            
                             VerticalOptions="Fill"
-                            HorizontalOptions="Center">
-                        
-                        <Label Style="{StaticResource PlayerLabel}"
+                            >
+                            <!--make a grid and assign the pencil edit button next to player name -->
+                            <Label Style="{StaticResource PlayerLabel}"
                                Text="{Binding PlayerName}"
                                HorizontalOptions="Center"
                                VerticalOptions="Center"
                                TextColor="{AppThemeBinding Light={StaticResource Black}, Dark={StaticResource White}}"/>
-                    </Border>
+                        </Border>
+                        <ImageButton                                 
+                                     Source="{AppThemeBinding Light=edit_player_light.png, Dark=edit_player_dark.png}"
+                                     Command="{Binding Source={x:Reference This}, Path=Command}"
+                                     CommandParameter="{Binding .}"
+                                     />
+                    </HorizontalStackLayout>
                 </Grid>
                 <!-- Player Stats -->
                 <Grid x:Name="PlayerStatsGrid" 
@@ -115,11 +123,11 @@
                               Color="{AppThemeBinding Light={StaticResource Pink}, Dark={StaticResource DeepRed}}"/>
                 </Grid>
                 <!-- footer -->
-                <Grid RowDefinitions="Auto" ColumnDefinitions="*,40" Margin="40,30,0,10" ColumnSpacing="5"
-                      HorizontalOptions="Start" VerticalOptions="End">
+                <Grid RowDefinitions="Auto" ColumnDefinitions="*,Auto" Margin="20,12,20,10" ColumnSpacing="5"
+                      HorizontalOptions="Fill" VerticalOptions="End">
                     <!-- Left: Player Created and date -->
-                    <HorizontalStackLayout Grid.Column="0" HorizontalOptions="Start" VerticalOptions="Center">
-                        <Label Text="Player Created" HorizontalOptions="Start" />
+                    <HorizontalStackLayout Grid.Column="0" HorizontalOptions="Center" VerticalOptions="Center">
+                        <Label Text="Player Created" HorizontalOptions="Center" />
                         <Label Text="{Binding PlayerCreatedDate}" HorizontalOptions="Center" />
                     </HorizontalStackLayout>
                     <!-- Right: Card rank and symbol, rotated 180 -->

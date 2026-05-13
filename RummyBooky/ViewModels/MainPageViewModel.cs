@@ -2,10 +2,10 @@
 
 namespace RummyBooky.ViewModels;
 
-public partial class MainPageViewModel(IPopupService popupService, GameService gameService) 
+public partial class MainPageViewModel(IPopupService popupService, GameService gameService, IAppAudioService appAudioService) 
     : BaseViewModel(popupService, gameService)
 {
-
+    private readonly IAppAudioService _appAudioService = appAudioService;
     public ObservableCollection<GameModel> ActiveGames { get; set; } = [];
     public ObservableCollection<GameModel> PlayedGames { get; set; } = [];
 
@@ -19,6 +19,25 @@ public partial class MainPageViewModel(IPopupService popupService, GameService g
         ResumeGameCommand.NotifyCanExecuteChanged();
     }
 
+    [RelayCommand]
+    private async Task<bool> MuteUnmuteGambler()
+    {
+        var results = false;
+        switch(_appAudioService.Volume)
+        {
+            case 0:
+                _appAudioService.Unmute();
+                results = true;
+                break;
+            case > 0:
+                _appAudioService.Mute();
+                results = true;
+                break;
+
+        }
+
+        return results;
+    }
 
     [RelayCommand]
     private async Task Appearing()
@@ -32,7 +51,7 @@ public partial class MainPageViewModel(IPopupService popupService, GameService g
     private async Task<bool> LoadAllPlayersAsync()
     {
         var results = false;
-        results = await _gameService.LoadAllPlayersAsync();
+        results = await _gameService.LoadAllPlayersDictionaryAsync();
         return results;
     }
 
@@ -85,13 +104,26 @@ public partial class MainPageViewModel(IPopupService popupService, GameService g
     [RelayCommand(CanExecute = nameof(CanResumeGame))]
     private async Task<bool> ResumeGame()
     {
-        var results = false;
-        await Shell.Current.GoToAsync(nameof(CurrentGamePage), new Dictionary<string, object>
+        try
         {
-            ["CurrentGame"] = SelectedGame
-        });
-        results = true;
-        SelectedGame = null;
-        return results;
+            var results = false;
+            if (SelectedGame is null)
+                return results;
+            await Shell.Current.GoToAsync(nameof(CurrentGamePage), new Dictionary<string, object>
+            {
+                ["CurrentGame"] = SelectedGame
+            });
+            results = true;
+            SelectedGame = null;
+            return results;
+        }
+        catch (Exception ex)
+        {
+            await MainThread.InvokeOnMainThreadAsync(async () =>
+            {
+                await ShowPopupAsync(title: "Error Resuming Game", message: ex.Message, isDismissable: false);
+            });
+            throw;
+        }
     }
 }
