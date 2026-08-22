@@ -1,4 +1,4 @@
-﻿namespace RummyBooky.Services;
+namespace RummyBooky.Services;
 
 public class GameService
 {
@@ -15,13 +15,133 @@ public class GameService
     private readonly string _savedGamesFolder = string.Empty;
     private Dictionary<Guid, PlayerModel> _allPlayers = [];
 
+    public void RecalculateGameScores(GameModel game) => RecalculateGame(game);
+
+    public void RecalculateGame(GameModel game)
+    {
+        if (game is null || game.Players.Count == 0)
+            return;
+
+        // 1. Reset player running totals
+        foreach (var player in game.Players)
+        {
+            player.PlayerScore = 0;
+            player.HighestScoredHand = int.MinValue;
+            player.LowestScoredHand = int.MaxValue;
+        }
+
+        PlayerModel? latestLeader = null;
+        PlayerModel? latestHighestPlayer = null;
+        int latestHighestValue = int.MinValue;
+        PlayerModel? latestLowestPlayer = null;
+        int latestLowestValue = int.MaxValue;
+
+        // 2. Iterate through each RoundModel in game.Round (1..N)
+        for (int r = 0; r < game.Round.Count; r++)
+        {
+            var round = game.Round[r];
+
+            // Sync RoundScores from PlayersScoredHandThisRound if RoundScores is empty
+            if (round.RoundScores.Count == 0 && round.PlayersScoredHandThisRound.Count > 0)
+            {
+                foreach (var p in round.PlayersScoredHandThisRound)
+                {
+                    int s = 0;
+                    if (!string.IsNullOrWhiteSpace(p.PlayerScoreText) && int.TryParse(p.PlayerScoreText, out var parsed))
+                    {
+                        s = parsed;
+                    }
+                    round.RoundScores.Add(new RoundScoreModel { PlayerId = p.ID, Score = s });
+                }
+            }
+
+            bool isScoredRound = round.RoundScores.Count > 0;
+
+            if (isScoredRound)
+            {
+                // Ensure every player has a RoundScore entry
+                foreach (var player in game.Players)
+                {
+                    var scoreEntry = round.RoundScores.FirstOrDefault(rs => rs.PlayerId == player.ID);
+                    if (scoreEntry is null)
+                    {
+                        scoreEntry = new RoundScoreModel { PlayerId = player.ID, Score = 0 };
+                        round.RoundScores.Add(scoreEntry);
+                    }
+                }
+
+                round.CurrentHighestScoredHandValue = int.MinValue;
+                round.PlayerHighestScoringHand = null;
+                round.CurrentLowestScoredHandValue = int.MaxValue;
+                round.PlayerLowestScoringHand = null;
+
+                foreach (var player in game.Players)
+                {
+                    var scoreEntry = round.RoundScores.First(rs => rs.PlayerId == player.ID);
+                    int score = scoreEntry.Score;
+
+                    player.PlayerScore += score;
+
+                    if (score > player.HighestScoredHand)
+                    {
+                        player.HighestScoredHand = score;
+                    }
+                    if (score < player.LowestScoredHand)
+                    {
+                        player.LowestScoredHand = score;
+                    }
+
+                    if (score > round.CurrentHighestScoredHandValue)
+                    {
+                        round.CurrentHighestScoredHandValue = score;
+                        round.PlayerHighestScoringHand = player;
+                    }
+
+                    if (score < round.CurrentLowestScoredHandValue)
+                    {
+                        round.CurrentLowestScoredHandValue = score;
+                        round.PlayerLowestScoringHand = player;
+                    }
+                }
+
+                round.LeadingPlayer = game.Players.OrderByDescending(p => p.PlayerScore).FirstOrDefault();
+
+                latestLeader = round.LeadingPlayer;
+                latestHighestPlayer = round.PlayerHighestScoringHand;
+                latestHighestValue = round.CurrentHighestScoredHandValue;
+                latestLowestPlayer = round.PlayerLowestScoringHand;
+                latestLowestValue = round.CurrentLowestScoredHandValue;
+            }
+            else
+            {
+                round.LeadingPlayer = latestLeader;
+                round.PlayerHighestScoringHand = latestHighestPlayer;
+                round.CurrentHighestScoredHandValue = latestHighestValue;
+                round.PlayerLowestScoringHand = latestLowestPlayer;
+                round.CurrentLowestScoredHandValue = latestLowestValue;
+            }
+        }
+
+        foreach (var player in game.Players)
+        {
+            if (player.HighestScoredHand == int.MinValue)
+                player.HighestScoredHand = 0;
+            if (player.LowestScoredHand == int.MaxValue)
+                player.LowestScoredHand = 0;
+        }
+    }
+
     public NewGameModel GetNewGameModel()
     {
         return new NewGameModel();
     }
     public async Task<bool> AddPlayerToNewGameAsync(GameModel gameModel, string playerName)
     {
-        var newPlayer = new PlayerModel { PlayerName = playerName };
+        var newPlayer = new PlayerModel
+        {
+            PlayerName = playerName,
+            IsNewPlayer = true
+        };
         gameModel.Players.Add(newPlayer);
         return true;
     }
@@ -45,10 +165,12 @@ public class GameService
     public async Task<bool> SetPlayerScoreCurrentGameScoreAsync(PlayerModel player)
     {
         var results = false;
-        player.PlayerScore += int.Parse(player.PlayerScoreText);
-        results = true;
+        if (int.TryParse(player.PlayerScoreText, out var scoreVal))
+        {
+            player.PlayerScore += scoreVal;
+            results = true;
+        }
         return results;
-
     }
 
     public async Task<bool> SetPlayersHighestScoredHandAsync(PlayerModel player)
@@ -167,7 +289,7 @@ public class GameService
         //string json = JsonSerializer.Serialize(game, options);
 
         var filePath = Path.Combine(_savedGamesFolder, $"game_{game.GameId}.json");
-        var gameJson = JsonSerializer.Serialize(game);
+        var gameJson = JsonSerializer.Serialize(game, typeof(GameModel));
         await File.WriteAllTextAsync(filePath, gameJson);
         results = true;
         return results;
@@ -181,21 +303,21 @@ public class GameService
     public async Task<List<CurrentGameModel>> LoadActiveGamesAsync()
     {
         var activeGames = new List<CurrentGameModel>();
-        //var gameFiles = Directory.GetFiles(_savedGamesFolder, "game_*.json");
-        //var options = new JsonSerializerOptions
-        // {
-        //     ReferenceHandler = ReferenceHandler.Preserve,
-        //     MaxDepth = 256
-        // };
 
         foreach (var file in EnumerateGameFiles())
         {
-
-            var gameJson = await File.ReadAllTextAsync(file);
-            var game = JsonSerializer.Deserialize<GameModel>(gameJson);
-            if (game is { IsGameActive: true })
+            try
             {
-                activeGames.Add((CurrentGameModel)game);
+                var gameJson = await File.ReadAllTextAsync(file);
+                var game = JsonSerializer.Deserialize<GameModel>(gameJson);
+                if (game is CurrentGameModel current && current.IsGameActive && current.Players.Count >= IntConstants.MinimumPlayerCount)
+                {
+                    activeGames.Add(current);
+                }
+            }
+            catch
+            {
+                // Ignore corrupted or incompatible legacy game files safely
             }
         }
         return activeGames;
@@ -204,20 +326,20 @@ public class GameService
     public async Task<List<GameModel>> LoadPlayedGamesAsync()
     {
         var playedGames = new List<GameModel>();
-        //gameFiles = Directory.GetFiles(_savedGamesFolder, "game_*.json");
-        var options = new JsonSerializerOptions
-        {
-            ReferenceHandler = ReferenceHandler.Preserve,
-            MaxDepth = 256
-        };
         foreach (var file in EnumerateGameFiles())
         {
-
-            var gameJson = await File.ReadAllTextAsync(file);
-            var game = JsonSerializer.Deserialize<GameModel>(gameJson);
-            if (game is { IsGameActive: false })//only playedGames.
+            try
             {
-                playedGames.Add(game);
+                var gameJson = await File.ReadAllTextAsync(file);
+                var game = JsonSerializer.Deserialize<GameModel>(gameJson);
+                if (game is { IsGameActive: false })
+                {
+                    playedGames.Add(game);
+                }
+            }
+            catch
+            {
+                // Ignore corrupted or incompatible legacy game files safely
             }
         }
         return playedGames;
@@ -300,19 +422,21 @@ public class GameService
     /// <returns></returns>
     public async Task<bool> SetNextDealerForNewRoundAsync(GameModel currentGame)
     {
-        var results = false;
-        var currentDealerIndex = currentGame
-            .Players
-            .IndexOf(currentGame
-                        .Players
-                        .First(p => p.IsDealer));
+        if (currentGame?.Players == null || currentGame.Players.Count == 0) return false;
 
-        if (currentDealerIndex == -1) return results;
+        var currentDealer = currentGame.Players.FirstOrDefault(p => p.IsDealer);
+        if (currentDealer == null)
+        {
+            currentGame.Players[0].IsDealer = true;
+            return true;
+        }
+
+        var currentDealerIndex = currentGame.Players.IndexOf(currentDealer);
+        if (currentDealerIndex == -1) return false;
 
         var nextDealerIndex = (currentDealerIndex + 1) % currentGame.Players.Count;
         currentGame.Players[currentDealerIndex].IsDealer = false; //no longer the dealer.
         currentGame.Players[nextDealerIndex].IsDealer = true; // next dealer.
-        results = true;
         return true;
     }
 
@@ -324,52 +448,59 @@ public class GameService
 
         foreach (var filePath in EnumerateGameFiles())
         {
-            var gameJson = await File.ReadAllTextAsync(filePath);
-            var tempGameModel = JsonSerializer.Deserialize<GameModel>(gameJson);
-
-            if (tempGameModel is not { Players: { } playerList })
-                continue;
-
-            var isPlayedGame = tempGameModel is PlayedGameModel;
-
-            foreach (var player in playerList)
+            try
             {
-                if (!_allPlayers.TryGetValue(player.ID, out var agg))
+                var gameJson = await File.ReadAllTextAsync(filePath);
+                var tempGameModel = JsonSerializer.Deserialize<GameModel>(gameJson);
+
+                if (tempGameModel is not { Players: { } playerList })
+                    continue;
+
+                var isPlayedGame = tempGameModel is PlayedGameModel;
+
+                foreach (var player in playerList)
                 {
-                    agg = ToRosterPlayer(player);
-                    _allPlayers.Add(player.ID, agg);
+                    if (!_allPlayers.TryGetValue(player.ID, out var agg))
+                    {
+                        agg = ToRosterPlayer(player);
+                        _allPlayers.Add(player.ID, agg);
+                    }
+
+                    if (isPlayedGame)
+                    {
+                        agg.TotalGamesPlayed += 1;
+                        var playedGame = (PlayedGameModel)tempGameModel;
+
+                        if (playedGame.GameState is GameStatus.Won)
+                        {
+                            agg.LifetimeScore += player.PlayerScore;
+                            if (playedGame.WinningPlayer?.ID == player.ID)
+                                agg.GamesWon += 1;
+                            else
+                                agg.GamesLost += 1;
+
+                            UpdatePlayerAggregateHighestLowestHands(aggregate: agg, source: player);
+                        }
+                        else if (playedGame.GameState is GameStatus.Draw)
+                        {
+                            //Draw. Just calculate lifetime score
+                            //no one lost or won.
+                            agg.LifetimeScore += player.PlayerScore;
+                            agg.GameDraws += 1;
+                            UpdatePlayerAggregateHighestLowestHands(aggregate: agg, source: player);
+                        }
+                        else if (playedGame.GameState is GameStatus.Forfeit)
+                        {
+                            agg.GamesForfeit += 1;
+                        }
+                    }
                 }
-
-                if (isPlayedGame)
-                {
-                    agg.TotalGamesPlayed += 1;
-                    var playedGame = (PlayedGameModel)tempGameModel;
-
-                    if (playedGame.GameState is GameStatus.Won)
-                    {
-                        agg.LifetimeScore += player.PlayerScore;
-                        if (playedGame.WinningPlayer?.ID == player.ID)
-                            agg.GamesWon += 1;
-                        else
-                            agg.GamesLost += 1;
-
-                        UpdatePlayerAggregateHighestLowestHands(aggregate: agg, source: player);
-                    }
-                    else if (playedGame.GameState is GameStatus.Draw)
-                    {
-                        //Draw. Just calculate lifetime score
-                        //no one lost or won.
-                        agg.LifetimeScore += player.PlayerScore;
-                        agg.GameDraws += 1;
-                        UpdatePlayerAggregateHighestLowestHands(aggregate: agg, source: player);
-                    }
-                    else if (playedGame.GameState is GameStatus.Forfeit)
-                    {
-                        agg.GamesForfeit += 1;
-                    }
-                }
+                results = true;
             }
-            results = true;
+            catch
+            {
+                // Safely skip legacy or corrupted files missing type discriminators
+            }
         }
         return results;
     }
@@ -418,7 +549,9 @@ public class GameService
             throw new InvalidDataException($"Player not found: {player.PlayerName} ID: {player.ID}");
         }
 
-        gameModelTemplate.Players.Add(ToRosterPlayer(profile));
+        var rosterPlayer = ToRosterPlayer(profile);
+        rosterPlayer.IsNewPlayer = false;
+        gameModelTemplate.Players.Add(rosterPlayer);
         results = true;
         return results;
     }
@@ -491,7 +624,7 @@ public class GameService
         // New instance for this game; same identity, per-game fields reset
         return new PlayerModel
         {
-            ID = profile.ID,
+            ID = profile.ID == Guid.Empty ? Guid.NewGuid() : profile.ID,
             PlayerName = profile.PlayerName,
             PlayerCreatedDate = profile.PlayerCreatedDate,
             LifetimeScore = profile.LifetimeScore,
@@ -523,6 +656,8 @@ public class GameService
 
     public async Task<List<PlayerModel>> GetTopPlayersAsync(int count = 10)
     {
+        await LoadAllPlayersDictionaryAsync();
+
         // Build rank map from the full players collection
         var rankMap = BuildRankMap();
 
@@ -578,45 +713,52 @@ public class GameService
 
         foreach (var filePath in gameFiles)
         {
-            var gameJson = await File.ReadAllTextAsync(filePath);
-            var game = JsonSerializer.Deserialize<GameModel>(gameJson);
-
-            if (game is null)
-                continue;
-
-            var changed = RemovePlayerReferencesFromGame(game, removePlayer.ID);
-            if (!changed)
-                continue;
-
-            // If the game is no longer valid, remove it entirely.
-            if (game.Players.Count < IntConstants.MinimumPlayerCount)
+            try
             {
-                File.Delete(filePath);
-                results = true;
-                continue;
-            }
+                var gameJson = await File.ReadAllTextAsync(filePath);
+                var game = JsonSerializer.Deserialize<GameModel>(gameJson);
 
-            if (game is PlayedGameModel playedGame)
-            {
-                var rebuiltPlayedGame = RebuildPlayedGameAfterPlayerRemoval(playedGame);
+                if (game is null)
+                    continue;
 
-                // No remaining valid outcome for this historical game.
-                if (rebuiltPlayedGame is null)
+                var changed = RemovePlayerReferencesFromGame(game, removePlayer.ID);
+                if (!changed)
+                    continue;
+
+                // If the game is no longer valid, remove it entirely.
+                if (game.Players.Count < IntConstants.MinimumPlayerCount)
                 {
                     File.Delete(filePath);
                     results = true;
                     continue;
                 }
 
-                await SaveGameAsync(rebuiltPlayedGame);
-            }
-            else
-            {
-                EnsureSingleDealer(game);
-                await SaveGameAsync(game);
-            }
+                if (game is PlayedGameModel playedGame)
+                {
+                    var rebuiltPlayedGame = RebuildPlayedGameAfterPlayerRemoval(playedGame);
 
-            results = true;
+                    // No remaining valid outcome for this historical game.
+                    if (rebuiltPlayedGame is null)
+                    {
+                        File.Delete(filePath);
+                        results = true;
+                        continue;
+                    }
+
+                    await SaveGameAsync(rebuiltPlayedGame);
+                }
+                else
+                {
+                    EnsureSingleDealer(game);
+                    await SaveGameAsync(game);
+                }
+
+                results = true;
+            }
+            catch
+            {
+                // Safely skip legacy or corrupted files missing type discriminators
+            }
         }
 
         if (results)
@@ -721,6 +863,15 @@ public class GameService
             }
         }
 
+        for (int i = round.RoundScores.Count - 1; i >= 0; i--)
+        {
+            if (round.RoundScores[i].PlayerId == playerId)
+            {
+                round.RoundScores.RemoveAt(i);
+                changed = true;
+            }
+        }
+
         if (round.LeadingPlayer?.ID == playerId)
         {
             round.LeadingPlayer = null;
@@ -747,30 +898,41 @@ public class GameService
 
     public async Task<bool> UpdatePlayerNameHistory(PlayerModel renamePlayer, string newName)
     {
-        var results = false;
+        if (renamePlayer is null || string.IsNullOrWhiteSpace(newName))
+            return false;
+
+        renamePlayer.PlayerName = newName;
+        if (_allPlayers.TryGetValue(renamePlayer.ID, out var cachedPlayer))
+        {
+            cachedPlayer.PlayerName = newName;
+        }
+
+        var results = true;
         var gameFiles = EnumerateGameFiles().ToList();
 
         foreach (var filePath in gameFiles)
         {
-            var gameJson = await File.ReadAllTextAsync(filePath);
-            var game = JsonSerializer.Deserialize<GameModel>(gameJson);
+            try
+            {
+                var gameJson = await File.ReadAllTextAsync(filePath);
+                var game = JsonSerializer.Deserialize<GameModel>(gameJson);
 
-            if (game is null)
-                continue;
+                if (game is null)
+                    continue;
 
-            var changed = RenamePlayerReferencesInGame(game, renamePlayer.ID, newName);
-            if (!changed)
-                continue;
+                var changed = RenamePlayerReferencesInGame(game, renamePlayer.ID, newName);
+                if (!changed)
+                    continue;
 
-
-            results = await SaveGameAsync(game);
+                await SaveGameAsync(game);
+            }
+            catch
+            {
+                // Safely skip legacy or corrupted files missing type discriminators
+            }
         }
 
-        if (results)
-        {
-            await LoadAllPlayersDictionaryAsync();
-        }
-
+        await LoadAllPlayersDictionaryAsync();
         return results;
     }
     private static void EnsureSingleDealer(GameModel game)

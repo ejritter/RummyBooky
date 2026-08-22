@@ -1,4 +1,4 @@
-﻿using CommunityToolkit.Maui.Core;
+using CommunityToolkit.Maui.Core;
 
 namespace RummyBooky.ViewModels;
 
@@ -16,20 +16,23 @@ public partial class GeneralPopupViewModel(IPopupService popupService) : BasePop
             }
         }
         CurrentGameStatus = (GameStatus)query["gameStatus"];
-        //CurrentGameStatus == draw. 
-        //allow user to select draw option or select a winner.
-        DisplayWinners = CurrentGameStatus == GameStatus.Draw;
-        DisplayWinnerButton = CurrentGameStatus == GameStatus.Draw;
+        
+        bool hasPlayers = WinningPlayers.Count > 0;
+        DisplayWinners = hasPlayers;
+        DisplayWinnerButton = hasPlayers;
+        DisplayDrawButton = CurrentGameStatus == GameStatus.Draw;
+        ConfirmButtonText = CurrentGameStatus == GameStatus.Draw ? "Winner" : "Select";
 
-        //if gamestatus is NOT won then false.
         DisplayOkayButton = CurrentGameStatus == GameStatus.Won;
-        //Unknown means the game is being played and this is coming from the quit game call on currentgameviewmodel.
-        DisplayQuitButton = CurrentGameStatus == GameStatus.Unknown;
+        DisplayQuitButton = CurrentGameStatus == GameStatus.Unknown && !hasPlayers;
         PopupResults = new PopupResultsModel();
     }
 
     [ObservableProperty]
-    public partial PopupResultsModel? PopupResults{ get; set; } = null;
+    public partial string ConfirmButtonText { get; set; } = "Select";
+
+    [ObservableProperty]
+    public partial PopupResultsModel? PopupResults { get; set; } = null;
 
     [ObservableProperty]
     public partial bool DisplayQuitButton { get; set; } = false;
@@ -39,6 +42,9 @@ public partial class GeneralPopupViewModel(IPopupService popupService) : BasePop
 
     [ObservableProperty]
     public partial bool DisplayWinnerButton { get; set; } = false;
+
+    [ObservableProperty]
+    public partial bool DisplayDrawButton { get; set; } = false;
 
     [ObservableProperty]
     public partial GameStatus CurrentGameStatus { get; set; } = GameStatus.Unknown;
@@ -81,7 +87,7 @@ public partial class GeneralPopupViewModel(IPopupService popupService) : BasePop
     private async Task ConfirmWinner()
     {
         PopupResults.Confirmed = true;
-        PopupResults.GameState = GameStatus.Won;
+        PopupResults.GameState = CurrentGameStatus == GameStatus.Unknown ? GameStatus.Unknown : GameStatus.Won;
         PopupResults.SelectedWinner = SelectedPlayer;
         await _popupService.ClosePopupAsync(Shell.Current, PopupResults);
     }
@@ -93,14 +99,15 @@ public partial class GeneralPopupViewModel(IPopupService popupService) : BasePop
         await _popupService.ClosePopupAsync(Shell.Current, PopupResults);
     }
 
+    [RelayCommand]
+    private void SelectPlayer(PlayerModel player)
+    {
+        SelectedPlayer = player;
+        ConfirmWinnerCommand.NotifyCanExecuteChanged();
+    }
+
     private bool CanExecuteConfirmWinner()
     {
-        var results = false;
-        if (SelectedPlayer == null)
-            return results;
-        else if (SelectedPlayer is not null)
-            results = true;
-
-        return results;
+        return SelectedPlayer != null;
     }
 }

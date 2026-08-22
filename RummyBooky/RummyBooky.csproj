@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
 		<TargetFrameworks>net10.0-android;net10.0-ios;net10.0-maccatalyst</TargetFrameworks>
@@ -11,11 +11,15 @@
 		either BOTH runtimes must be indicated or ONLY macatalyst-x64. -->
 		<!-- For example: <RuntimeIdentifiers>maccatalyst-x64;maccatalyst-arm64</RuntimeIdentifiers> -->
 		<OutputType>Exe</OutputType>
+		<OutputType Condition="'$(TargetFramework)' == 'net10.0-windows10.0.19041.0'">WinExe</OutputType>
 		<RootNamespace>RummyBooky</RootNamespace>
 		<UseMaui>true</UseMaui>
 		<SingleProject>true</SingleProject>
 		<ImplicitUsings>enable</ImplicitUsings>
 		<Nullable>enable</Nullable>
+		<LangVersion>preview</LangVersion>
+		<EnablePreviewFeatures>true</EnablePreviewFeatures>
+		<NoWarn>$(NoWarn);CS8604;CS8602;CS8603;CS9107;CS0618;CS8625;CA1416;MVVMTK0045;CS1570;CA2252</NoWarn>
 
 		<!-- Display name -->
 		<ApplicationTitle>Rummy Booky</ApplicationTitle>
@@ -37,6 +41,11 @@
 		<SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'android'">21.0</SupportedOSPlatformVersion>
 		<SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'windows'">10.0.17763.0</SupportedOSPlatformVersion>
 		<TargetPlatformMinVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'windows'">10.0.17763.0</TargetPlatformMinVersion>
+		<RuntimeIdentifier Condition="'$(TargetFramework)' == 'net10.0-android'">android-arm64</RuntimeIdentifier>
+		<AndroidEnableProfiledAot Condition="'$(TargetFramework)' == 'net10.0-android'">false</AndroidEnableProfiledAot>
+		<RunAOTCompilation Condition="'$(TargetFramework)' == 'net10.0-android'">false</RunAOTCompilation>
+		<AndroidFastDeployment Condition="'$(TargetFramework)' == 'net10.0-android'">false</AndroidFastDeployment>
+		<EmbedAssembliesIntoApk Condition="'$(TargetFramework)' == 'net10.0-android'">true</EmbedAssembliesIntoApk>
 	</PropertyGroup>
 
 	<ItemGroup>
@@ -61,14 +70,15 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<PackageReference Include="CommunityToolkit.Maui" Version="14.1.0" />
+		<PackageReference Include="CommunityToolkit.Maui" Version="15.0.0" />
 		<PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.2" />
-		<PackageReference Include="Microsoft.Maui.Controls" Version="10.0.51" />
-		<PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="10.0.7" />
+		<PackageReference Include="Microsoft.Maui.Controls" Version="10.0.90" />
+		<PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="10.0.11" />
 		<PackageReference Include="Plugin.Maui.Audio" Version="4.0.0" />
-		<PackageReference Include="Serilog" Version="4.3.1" />
+		<PackageReference Include="Serilog" Version="4.4.0" />
 		<PackageReference Include="Serilog.Extensions.Hosting" Version="10.0.0" />
 		<PackageReference Include="Serilog.Sinks.File" Version="7.0.0" />
+		<PackageReference Condition="'$(Configuration)' == 'Debug'" Include="Microsoft.Maui.DevFlow.Agent" Version="0.1.0-preview.12.26368.2" />
 	</ItemGroup>
 
 	<ItemGroup>

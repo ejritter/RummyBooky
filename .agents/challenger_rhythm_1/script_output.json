@@ -1,0 +1,762 @@
+﻿{
+    "TotalFilesInspected":  16,
+    "TotalValuesParsed":  94,
+    "TotalViolations":  0,
+    "Extracted":  [
+                      {
+                          "File":  "C:\\Dev\\RummyBookyMaui\\RummyBooky\\Pages\\CurrentGamePage.xaml",
+                          "Property":  "Padding",
+                          "Value":  "16",
+                          "ParsedNumber":  16,
+                          "ValidMod4":  true,
+                          "Type":  "Attribute"
+                      },
+                      {
+                          "File":  "C:\\Dev\\RummyBookyMaui\\RummyBooky\\Pages\\CurrentGamePage.xaml",
+                          "Property":  "RowSpacing",
+                          "Value":  "16",
+                          "ParsedNumber":  16,
+                          "ValidMod4":  true,
+                          "Type":  "Attribute"
+                      },
+                      {
+                          "File":  "C:\\Dev\\RummyBookyMaui\\RummyBooky\\Pages\\CurrentGamePage.xaml",
+                          "Property":  "ColumnSpacing",
+                          "Value":  "16",
+                          "ParsedNumber":  16,
+                          "ValidMod4":  true,
+                          "Type":  "Attribute"
+                      },
+                      {
+                          "File":  "C:\\Dev\\RummyBookyMaui\\RummyBooky\\Pages\\CurrentGamePage.xaml",
+                          "Property":  "ColumnSpacing",
+                          "Value":  "16",
+                          "ParsedNumber":  16,
+                          "ValidMod4":  true,
+                          "Type":  "Attribute"
+                      },
+                      {
+                          "File":  "C:\\Dev\\RummyBookyMaui\\RummyBooky\\Pages\\CurrentGamePage.xaml",
+                          "Property":  "ColumnSpacing",
+                          "Value":  "0",
+                          "ParsedNumber":  0,
+                          "ValidMod4":  true,
+                          "Type":  "Attribute"
+                      },
+                      {
+                          "File":  "C:\\Dev\\RummyBookyMaui\\RummyBooky\\Pages\\CurrentGamePage.xaml",
+                          "Property":  "Padding",
+                          "Value":  "12,12",
+                          "ParsedNumber":  12,
+                          "ValidMod4":  true,
+                          "Type":  "Attribute"
+                      },
+                      {
+                          "File":  "C:\\Dev\\RummyBookyMaui\\RummyBooky\\Pages\\CurrentGamePage.xaml",
+                          "Property":  "Padding",
+                          "Value":  "12,12",
+                          "ParsedNumber":  12,
+                          "ValidMod4":  true,
+                          "Type":  "Attribute"
+                      },
+                      {
+                          "File":  "C:\\Dev\\RummyBookyMaui\\RummyBooky\\Pages\\CurrentGamePage.xaml",
+                          "Property":  "ColumnSpacing",
+                          "Value":  "0",
+                          "ParsedNumber":  0,
+                          "ValidMod4":  true,
+                          "Type":  "Attribute"
+                      },
+                      {
+                          "File":  "C:\\Dev\\RummyBookyMaui\\RummyBooky\\Pages\\CurrentGamePage.xaml",
+                          "Property":  "Padding",
+                          "Value":  "16",
+                          "ParsedNumber":  16,
+                          "ValidMod4":  true,
+                          "Type":  "Attribute"
+                      },
+                      {
+                          "File":  "C:\\Dev\\RummyBookyMaui\\RummyBooky\\Pages\\CurrentGamePage.xaml",
+                          "Property":  "RowSpacing",
+                          "Value":  "8",
+                          "ParsedNumber":  8,
+                          "ValidMod4":  true,
+                          "Type":  "Attribute"
+                      },
+                      {
+                          "File":  "C:\\Dev\\RummyBookyMaui\\RummyBooky\\Pages\\EditPlayerPage.xaml",
+                          "Property":  "Padding",
+                          "Value":  "16",
+                          "ParsedNumber":  16,
+                          "ValidMod4":  true,
+                          "Type":  "Attribute"
+                      },
+                      {
+                          "File":  "C:\\Dev\\RummyBookyMaui\\RummyBooky\\Pages\\EditPlayerPage.xaml",
+                          "Property":  "RowSpacing",
+                          "Value":  "16",
+                          "ParsedNumber":  16,
+                          "ValidMod4":  true,
+                          "Type":  "Attribute"
+                      },
+                      {
+                          "File":  "C:\\Dev\\RummyBookyMaui\\RummyBooky\\Pages\\EditPlayerPage.xaml",
+                          "Property":  "ColumnSpacing",
+                          "Value":  "16",
+                          "ParsedNumber":  16,
+                          "ValidMod4":  true,
+                          "Type":  "Attribute"
+                      },
+                      {
+                          "File":  "C:\\Dev\\RummyBookyMaui\\RummyBooky\\Pages\\EditPlayerPage.xaml",
+                          "Property":  "RowSpacing",
+                          "Value":  "12",
+                          "ParsedNumber":  12,
+                          "ValidMod4":  true,
+                          "Type":  "Attribute"
+                      },
+                      {
+                          "File":  "C:\\Dev\\RummyBookyMaui\\RummyBooky\\Pages\\EditPlayerPage.xaml",
+                          "Property":  "ColumnSpacing",
+                          "Value":  "12",
+                          "ParsedNumber":  12,
+                          "ValidMod4":  true,
+                          "Type":  "Attribute"
+                      },
+                      {
+                          "File":  "C:\\Dev\\RummyBookyMaui\\RummyBooky\\Pages\\GeneralPopupPage.xaml",
+                          "Property":  "Padding",
+                          "Value":  "16",
+                          "ParsedNumber":  16,
+                          "ValidMod4":  true,
+                          "Type":  "Attribute"
+                      },
+                      {
+                          "File":  "C:\\Dev\\RummyBookyMaui\\RummyBooky\\Pages\\GeneralPopupPage.xaml",
+                          "Property":  "Margin",
+                          "Value":  "16",
+                          "ParsedNumber":  16,
+                          "ValidMod4":  true,
+                          "Type":  "Attribute"
+                      },
+                      {
+                          "File":  "C:\\Dev\\RummyBookyMaui\\RummyBooky\\Pages\\GeneralPopupPage.xaml",
+                          "Property":  "RowSpacing",
+                          "Value":  "16",
+                          "ParsedNumber":  16,
+                          "ValidMod4":  true,
+                          "Type":  "Attribute"
+                      },
+                      {
+                          "File":  "C:\\Dev\\RummyBookyMaui\\RummyBooky\\Pages\\GeneralPopupPage.xaml",
+                          "Property":  "Padding",
+                          "Value":  "12",
+                          "ParsedNumber":  12,
+                          "ValidMod4":  true,
+                          "Type":  "Attribute"
+                      },
+                      {
+                          "File":  "C:\\Dev\\RummyBookyMaui\\RummyBooky\\Pages\\GeneralPopupPage.xaml",
+                          "Property":  "Margin",
+                          "Value":  "4",
+                          "ParsedNumber":  4,
+                          "ValidMod4":  true,
+                          "Type":  "Attribute"
+                      },
+                      {
+                          "File":  "C:\\Dev\\RummyBookyMaui\\RummyBooky\\Pages\\GeneralPopupPage.xaml",
+                          "Property":  "Margin",
+                          "Value":  "4",
+                          "ParsedNumber":  4,
+                          "ValidMod4":  true,
+                          "Type":  "Attribute"
+                      },
+                      {
+                          "File":  "C:\\Dev\\RummyBookyMaui\\RummyBooky\\Pages\\GeneralPopupPage.xaml",
+                          "Property":  "Margin",
+                          "Value":  "4",
+                          "ParsedNumber":  4,
+                          "ValidMod4":  true,
+                          "Type":  "Attribute"
+                      },
+                      {
+                          "File":  "C:\\Dev\\RummyBookyMaui\\RummyBooky\\Pages\\GeneralPopupPage.xaml",
+                          "Property":  "Margin",
+                          "Value":  "4",
+                          "ParsedNumber":  4,
+                          "ValidMod4":  true,
+                          "Type":  "Attribute"
+                      },
+                      {
+                          "File":  "C:\\Dev\\RummyBookyMaui\\RummyBooky\\Pages\\GeneralPopupPage.xaml",
+                          "Property":  "Margin",
+                          "Value":  "4",
+                          "ParsedNumber":  4,
+                          "ValidMod4":  true,
+                          "Type":  "Attribute"
+                      },
+                      {
+                          "File":  "C:\\Dev\\RummyBookyMaui\\RummyBooky\\Pages\\GeneralPopupPage.xaml",
+                          "Property":  "Margin",
+                          "Value":  "4",
+                          "ParsedNumber":  4,
+                          "ValidMod4":  true,
+                          "Type":  "Attribute"
+                      },
+                      {
+                          "File":  "C:\\Dev\\RummyBookyMaui\\RummyBooky\\Pages\\LeaderboardPage.xaml",
+                          "Property":  "Padding",
+                          "Value":  "16",
+                          "ParsedNumber":  16,
+                          "ValidMod4":  true,
+                          "Type":  "Attribute"
+                      },
+                      {
+                          "File":  "C:\\Dev\\RummyBookyMaui\\RummyBooky\\Pages\\LeaderboardPage.xaml",
+                          "Property":  "RowSpacing",
+                          "Value":  "16",
+                          "ParsedNumber":  16,
+                          "ValidMod4":  true,
+                          "Type":  "Attribute"
+                      },
+                      {
+                          "File":  "C:\\Dev\\RummyBookyMaui\\RummyBooky\\Pages\\LeaderboardPage.xaml",
+                          "Property":  "Padding",
+                          "Value":  "24",
+                          "ParsedNumber":  24,
+                          "ValidMod4":  true,
+                          "Type":  "Attribute"
+                      },
+                      {
+                          "File":  "C:\\Dev\\RummyBookyMaui\\RummyBooky\\Pages\\LeaderboardPage.xaml",
+                          "Property":  "Margin",
+                          "Value":  "8",
+                          "ParsedNumber":  8,
+                          "ValidMod4":  true,
+                          "Type":  "Attribute"
+                      },
+                      {
+                          "File":  "C:\\Dev\\RummyBookyMaui\\RummyBooky\\Pages\\MainPage.xaml",
+                          "Property":  "Padding",
+                          "Value":  "16",
+                          "ParsedNumber":  16,
+                          "ValidMod4":  true,
+                          "Type":  "Attribute"
+                      },
+                      {
+                          "File":  "C:\\Dev\\RummyBookyMaui\\RummyBooky\\Pages\\MainPage.xaml",
+                          "Property":  "RowSpacing",
+                          "Value":  "16",
+                          "ParsedNumber":  16,
+                          "ValidMod4":  true,
+                          "Type":  "Attribute"
+                      },
+                      {
+                          "File":  "C:\\Dev\\RummyBookyMaui\\RummyBooky\\Pages\\MainPage.xaml",
+                          "Property":  "RowSpacing",
+                          "Value":  "8",
+                          "ParsedNumber":  8,
+                          "ValidMod4":  true,
+                          "Type":  "Attribute"
+                      },
+                      {
+                          "File":  "C:\\Dev\\RummyBookyMaui\\RummyBooky\\Pages\\MainPage.xaml",
+                          "Property":  "Padding",
+                          "Value":  "12,8",
+                          "ParsedNumber":  12,
+                          "ValidMod4":  true,
+                          "Type":  "Attribute"
+                      },
+                      {
+                          "File":  "C:\\Dev\\RummyBookyMaui\\RummyBooky\\Pages\\MainPage.xaml",
+                          "Property":  "Padding",
+                          "Value":  "12,8",
+                          "ParsedNumber":  8,
+                          "ValidMod4":  true,
+                          "Type":  "Attribute"
+                      },
+                      {
+                          "File":  "C:\\Dev\\RummyBookyMaui\\RummyBooky\\Pages\\MainPage.xaml",
+                          "Property":  "ColumnSpacing",
+                          "Value":  "16",
+                          "ParsedNumber":  16,
+                          "ValidMod4":  true,
+                          "Type":  "Attribute"
+                      },
+                      {
+                          "File":  "C:\\Dev\\RummyBookyMaui\\RummyBooky\\Pages\\NewGamePage.xaml",
+                          "Property":  "ColumnSpacing",
+                          "Value":  "24",
+                          "ParsedNumber":  24,
+                          "ValidMod4":  true,
+                          "Type":  "Attribute"
+                      },
+                      {
+                          "File":  "C:\\Dev\\RummyBookyMaui\\RummyBooky\\Pages\\NewGamePage.xaml",
+                          "Property":  "RowSpacing",
+                          "Value":  "16",
+                          "ParsedNumber":  16,
+                          "ValidMod4":  true,
+                          "Type":  "Attribute"
+                      },
+                      {
+                          "File":  "C:\\Dev\\RummyBookyMaui\\RummyBooky\\Pages\\NewGamePage.xaml",
+                          "Property":  "Padding",
+                          "Value":  "16",
+                          "ParsedNumber":  16,
+                          "ValidMod4":  true,
+                          "Type":  "Attribute"
+                      },
+                      {
+                          "File":  "C:\\Dev\\RummyBookyMaui\\RummyBooky\\Pages\\NewGamePage.xaml",
+                          "Property":  "Padding",
+                          "Value":  "8,4",
+                          "ParsedNumber":  8,
+                          "ValidMod4":  true,
+                          "Type":  "Attribute"
+                      },
+                      {
+                          "File":  "C:\\Dev\\RummyBookyMaui\\RummyBooky\\Pages\\NewGamePage.xaml",
+                          "Property":  "Padding",
+                          "Value":  "8,4",
+                          "ParsedNumber":  4,
+                          "ValidMod4":  true,
+                          "Type":  "Attribute"
+                      },
+                      {
+                          "File":  "C:\\Dev\\RummyBookyMaui\\RummyBooky\\Pages\\NewGamePage.xaml",
+                          "Property":  "ColumnSpacing",
+                          "Value":  "0",
+                          "ParsedNumber":  0,
+                          "ValidMod4":  true,
+                          "Type":  "Attribute"
+                      },
+                      {
+                          "File":  "C:\\Dev\\RummyBookyMaui\\RummyBooky\\Pages\\NewGamePage.xaml",
+                          "Property":  "Padding",
+                          "Value":  "12,12",
+                          "ParsedNumber":  12,
+                          "ValidMod4":  true,
+                          "Type":  "Attribute"
+                      },
+                      {
+                          "File":  "C:\\Dev\\RummyBookyMaui\\RummyBooky\\Pages\\NewGamePage.xaml",
+                          "Property":  "Padding",
+                          "Value":  "12,12",
+                          "ParsedNumber":  12,
+                          "ValidMod4":  true,
+                          "Type":  "Attribute"
+                      },
+                      {
+                          "File":  "C:\\Dev\\RummyBookyMaui\\RummyBooky\\Pages\\NewGamePage.xaml",
+                          "Property":  "Padding",
+                          "Value":  "12,12",
+                          "ParsedNumber":  12,
+                          "ValidMod4":  true,
+                          "Type":  "Attribute"
+                      },
+                      {
+                          "File":  "C:\\Dev\\RummyBookyMaui\\RummyBooky\\Pages\\NewGamePage.xaml",
+                          "Property":  "Padding",
+                          "Value":  "12,12",
+                          "ParsedNumber":  12,
+                          "ValidMod4":  true,
+                          "Type":  "Attribute"
+                      },
+                      {
+                          "File":  "C:\\Dev\\RummyBookyMaui\\RummyBooky\\Pages\\NewGamePage.xaml",
+                          "Property":  "ColumnSpacing",
+                          "Value":  "0",
+                          "ParsedNumber":  0,
+                          "ValidMod4":  true,
+                          "Type":  "Attribute"
+                      },
+                      {
+                          "File":  "C:\\Dev\\RummyBookyMaui\\RummyBooky\\Resources\\Styles\\Dimensions.xaml",
+                          "Property":  "Resource:Spacing4 (x:Double)",
+                          "Value":  "4",
+                          "ParsedNumber":  4,
+                          "ValidMod4":  true,
+                          "Type":  "Resource"
+                      },
+                      {
+                          "File":  "C:\\Dev\\RummyBookyMaui\\RummyBooky\\Resources\\Styles\\Dimensions.xaml",
+                          "Property":  "Resource:Spacing8 (x:Double)",
+                          "Value":  "8",
+                          "ParsedNumber":  8,
+                          "ValidMod4":  true,
+                          "Type":  "Resource"
+                      },
+                      {
+                          "File":  "C:\\Dev\\RummyBookyMaui\\RummyBooky\\Resources\\Styles\\Dimensions.xaml",
+                          "Property":  "Resource:Spacing16 (x:Double)",
+                          "Value":  "16",
+                          "ParsedNumber":  16,
+                          "ValidMod4":  true,
+                          "Type":  "Resource"
+                      },
+                      {
+                          "File":  "C:\\Dev\\RummyBookyMaui\\RummyBooky\\Resources\\Styles\\Dimensions.xaml",
+                          "Property":  "Resource:Spacing24 (x:Double)",
+                          "Value":  "24",
+                          "ParsedNumber":  24,
+                          "ValidMod4":  true,
+                          "Type":  "Resource"
+                      },
+                      {
+                          "File":  "C:\\Dev\\RummyBookyMaui\\RummyBooky\\Resources\\Styles\\Dimensions.xaml",
+                          "Property":  "Resource:Spacing32 (x:Double)",
+                          "Value":  "32",
+                          "ParsedNumber":  32,
+                          "ValidMod4":  true,
+                          "Type":  "Resource"
+                      },
+                      {
+                          "File":  "C:\\Dev\\RummyBookyMaui\\RummyBooky\\Resources\\Styles\\Dimensions.xaml",
+                          "Property":  "Resource:CornerRadiusSmallValue (x:Double)",
+                          "Value":  "8",
+                          "ParsedNumber":  8,
+                          "ValidMod4":  true,
+                          "Type":  "Resource"
+                      },
+                      {
+                          "File":  "C:\\Dev\\RummyBookyMaui\\RummyBooky\\Resources\\Styles\\Dimensions.xaml",
+                          "Property":  "Resource:CornerRadiusMediumValue (x:Double)",
+                          "Value":  "12",
+                          "ParsedNumber":  12,
+                          "ValidMod4":  true,
+                          "Type":  "Resource"
+                      },
+                      {
+                          "File":  "C:\\Dev\\RummyBookyMaui\\RummyBooky\\Resources\\Styles\\Dimensions.xaml",
+                          "Property":  "Resource:CornerRadiusLargeValue (x:Double)",
+                          "Value":  "16",
+                          "ParsedNumber":  16,
+                          "ValidMod4":  true,
+                          "Type":  "Resource"
+                      },
+                      {
+                          "File":  "C:\\Dev\\RummyBookyMaui\\RummyBooky\\Resources\\Styles\\Dimensions.xaml",
+                          "Property":  "Resource:IconSizeSmall (x:Double)",
+                          "Value":  "16",
+                          "ParsedNumber":  16,
+                          "ValidMod4":  true,
+                          "Type":  "Resource"
+                      },
+                      {
+                          "File":  "C:\\Dev\\RummyBookyMaui\\RummyBooky\\Resources\\Styles\\Dimensions.xaml",
+                          "Property":  "Resource:IconSizeMedium (x:Double)",
+                          "Value":  "24",
+                          "ParsedNumber":  24,
+                          "ValidMod4":  true,
+                          "Type":  "Resource"
+                      },
+                      {
+                          "File":  "C:\\Dev\\RummyBookyMaui\\RummyBooky\\Resources\\Styles\\Dimensions.xaml",
+                          "Property":  "Resource:IconSizeLarge (x:Double)",
+                          "Value":  "32",
+                          "ParsedNumber":  32,
+                          "ValidMod4":  true,
+                          "Type":  "Resource"
+                      },
+                      {
+                          "File":  "C:\\Dev\\RummyBookyMaui\\RummyBooky\\Resources\\Styles\\Styles.xaml",
+                          "Property":  "Setter:Padding",
+                          "Value":  "16",
+                          "ParsedNumber":  16,
+                          "ValidMod4":  true,
+                          "Type":  "Setter"
+                      },
+                      {
+                          "File":  "C:\\Dev\\RummyBookyMaui\\RummyBooky\\Resources\\Styles\\Styles.xaml",
+                          "Property":  "Setter:Padding",
+                          "Value":  "16",
+                          "ParsedNumber":  16,
+                          "ValidMod4":  true,
+                          "Type":  "Setter"
+                      },
+                      {
+                          "File":  "C:\\Dev\\RummyBookyMaui\\RummyBooky\\Resources\\Styles\\Styles.xaml",
+                          "Property":  "Setter:Padding",
+                          "Value":  "16",
+                          "ParsedNumber":  16,
+                          "ValidMod4":  true,
+                          "Type":  "Setter"
+                      },
+                      {
+                          "File":  "C:\\Dev\\RummyBookyMaui\\RummyBooky\\Resources\\Styles\\Styles.xaml",
+                          "Property":  "Setter:Padding",
+                          "Value":  "16,8",
+                          "ParsedNumber":  16,
+                          "ValidMod4":  true,
+                          "Type":  "Setter"
+                      },
+                      {
+                          "File":  "C:\\Dev\\RummyBookyMaui\\RummyBooky\\Resources\\Styles\\Styles.xaml",
+                          "Property":  "Setter:Padding",
+                          "Value":  "16,8",
+                          "ParsedNumber":  8,
+                          "ValidMod4":  true,
+                          "Type":  "Setter"
+                      },
+                      {
+                          "File":  "C:\\Dev\\RummyBookyMaui\\RummyBooky\\Resources\\Styles\\Styles.xaml",
+                          "Property":  "Setter:Padding",
+                          "Value":  "0",
+                          "ParsedNumber":  0,
+                          "ValidMod4":  true,
+                          "Type":  "Setter"
+                      },
+                      {
+                          "File":  "C:\\Dev\\RummyBookyMaui\\RummyBooky\\Views\\CardBoxView.xaml",
+                          "Property":  "ColumnSpacing",
+                          "Value":  "16",
+                          "ParsedNumber":  16,
+                          "ValidMod4":  true,
+                          "Type":  "Attribute"
+                      },
+                      {
+                          "File":  "C:\\Dev\\RummyBookyMaui\\RummyBooky\\Views\\CardBoxView.xaml",
+                          "Property":  "Margin",
+                          "Value":  "0,0,8,0",
+                          "ParsedNumber":  0,
+                          "ValidMod4":  true,
+                          "Type":  "Attribute"
+                      },
+                      {
+                          "File":  "C:\\Dev\\RummyBookyMaui\\RummyBooky\\Views\\CardBoxView.xaml",
+                          "Property":  "Margin",
+                          "Value":  "0,0,8,0",
+                          "ParsedNumber":  0,
+                          "ValidMod4":  true,
+                          "Type":  "Attribute"
+                      },
+                      {
+                          "File":  "C:\\Dev\\RummyBookyMaui\\RummyBooky\\Views\\CardBoxView.xaml",
+                          "Property":  "Margin",
+                          "Value":  "0,0,8,0",
+                          "ParsedNumber":  8,
+                          "ValidMod4":  true,
+                          "Type":  "Attribute"
+                      },
+                      {
+                          "File":  "C:\\Dev\\RummyBookyMaui\\RummyBooky\\Views\\CardBoxView.xaml",
+                          "Property":  "Margin",
+                          "Value":  "0,0,8,0",
+                          "ParsedNumber":  0,
+                          "ValidMod4":  true,
+                          "Type":  "Attribute"
+                      },
+                      {
+                          "File":  "C:\\Dev\\RummyBookyMaui\\RummyBooky\\Views\\CardBoxView.xaml",
+                          "Property":  "Margin",
+                          "Value":  "8,0,0,0",
+                          "ParsedNumber":  8,
+                          "ValidMod4":  true,
+                          "Type":  "Attribute"
+                      },
+                      {
+                          "File":  "C:\\Dev\\RummyBookyMaui\\RummyBooky\\Views\\CardBoxView.xaml",
+                          "Property":  "Margin",
+                          "Value":  "8,0,0,0",
+                          "ParsedNumber":  0,
+                          "ValidMod4":  true,
+                          "Type":  "Attribute"
+                      },
+                      {
+                          "File":  "C:\\Dev\\RummyBookyMaui\\RummyBooky\\Views\\CardBoxView.xaml",
+                          "Property":  "Margin",
+                          "Value":  "8,0,0,0",
+                          "ParsedNumber":  0,
+                          "ValidMod4":  true,
+                          "Type":  "Attribute"
+                      },
+                      {
+                          "File":  "C:\\Dev\\RummyBookyMaui\\RummyBooky\\Views\\CardBoxView.xaml",
+                          "Property":  "Margin",
+                          "Value":  "8,0,0,0",
+                          "ParsedNumber":  0,
+                          "ValidMod4":  true,
+                          "Type":  "Attribute"
+                      },
+                      {
+                          "File":  "C:\\Dev\\RummyBookyMaui\\RummyBooky\\Views\\PlayerCardView.xaml",
+                          "Property":  "Padding",
+                          "Value":  "16",
+                          "ParsedNumber":  16,
+                          "ValidMod4":  true,
+                          "Type":  "Attribute"
+                      },
+                      {
+                          "File":  "C:\\Dev\\RummyBookyMaui\\RummyBooky\\Views\\PlayerCardView.xaml",
+                          "Property":  "RowSpacing",
+                          "Value":  "16",
+                          "ParsedNumber":  16,
+                          "ValidMod4":  true,
+                          "Type":  "Attribute"
+                      },
+                      {
+                          "File":  "C:\\Dev\\RummyBookyMaui\\RummyBooky\\Views\\PlayerCardView.xaml",
+                          "Property":  "Margin",
+                          "Value":  "8,0,16,16",
+                          "ParsedNumber":  8,
+                          "ValidMod4":  true,
+                          "Type":  "Attribute"
+                      },
+                      {
+                          "File":  "C:\\Dev\\RummyBookyMaui\\RummyBooky\\Views\\PlayerCardView.xaml",
+                          "Property":  "Margin",
+                          "Value":  "8,0,16,16",
+                          "ParsedNumber":  0,
+                          "ValidMod4":  true,
+                          "Type":  "Attribute"
+                      },
+                      {
+                          "File":  "C:\\Dev\\RummyBookyMaui\\RummyBooky\\Views\\PlayerCardView.xaml",
+                          "Property":  "Margin",
+                          "Value":  "8,0,16,16",
+                          "ParsedNumber":  16,
+                          "ValidMod4":  true,
+                          "Type":  "Attribute"
+                      },
+                      {
+                          "File":  "C:\\Dev\\RummyBookyMaui\\RummyBooky\\Views\\PlayerCardView.xaml",
+                          "Property":  "Margin",
+                          "Value":  "8,0,16,16",
+                          "ParsedNumber":  16,
+                          "ValidMod4":  true,
+                          "Type":  "Attribute"
+                      },
+                      {
+                          "File":  "C:\\Dev\\RummyBookyMaui\\RummyBooky\\Views\\PlayerCardView.xaml",
+                          "Property":  "RowSpacing",
+                          "Value":  "4",
+                          "ParsedNumber":  4,
+                          "ValidMod4":  true,
+                          "Type":  "Attribute"
+                      },
+                      {
+                          "File":  "C:\\Dev\\RummyBookyMaui\\RummyBooky\\Views\\PlayerCardView.xaml",
+                          "Property":  "ColumnSpacing",
+                          "Value":  "8",
+                          "ParsedNumber":  8,
+                          "ValidMod4":  true,
+                          "Type":  "Attribute"
+                      },
+                      {
+                          "File":  "C:\\Dev\\RummyBookyMaui\\RummyBooky\\Views\\PlayerCardView.xaml",
+                          "Property":  "Padding",
+                          "Value":  "24,8",
+                          "ParsedNumber":  24,
+                          "ValidMod4":  true,
+                          "Type":  "Attribute"
+                      },
+                      {
+                          "File":  "C:\\Dev\\RummyBookyMaui\\RummyBooky\\Views\\PlayerCardView.xaml",
+                          "Property":  "Padding",
+                          "Value":  "24,8",
+                          "ParsedNumber":  8,
+                          "ValidMod4":  true,
+                          "Type":  "Attribute"
+                      },
+                      {
+                          "File":  "C:\\Dev\\RummyBookyMaui\\RummyBooky\\Views\\PlayerCardView.xaml",
+                          "Property":  "Margin",
+                          "Value":  "8,0,0,0",
+                          "ParsedNumber":  8,
+                          "ValidMod4":  true,
+                          "Type":  "Attribute"
+                      },
+                      {
+                          "File":  "C:\\Dev\\RummyBookyMaui\\RummyBooky\\Views\\PlayerCardView.xaml",
+                          "Property":  "Margin",
+                          "Value":  "8,0,0,0",
+                          "ParsedNumber":  0,
+                          "ValidMod4":  true,
+                          "Type":  "Attribute"
+                      },
+                      {
+                          "File":  "C:\\Dev\\RummyBookyMaui\\RummyBooky\\Views\\PlayerCardView.xaml",
+                          "Property":  "Margin",
+                          "Value":  "8,0,0,0",
+                          "ParsedNumber":  0,
+                          "ValidMod4":  true,
+                          "Type":  "Attribute"
+                      },
+                      {
+                          "File":  "C:\\Dev\\RummyBookyMaui\\RummyBooky\\Views\\PlayerCardView.xaml",
+                          "Property":  "Margin",
+                          "Value":  "8,0,0,0",
+                          "ParsedNumber":  0,
+                          "ValidMod4":  true,
+                          "Type":  "Attribute"
+                      },
+                      {
+                          "File":  "C:\\Dev\\RummyBookyMaui\\RummyBooky\\Views\\PlayerCardView.xaml",
+                          "Property":  "RowSpacing",
+                          "Value":  "8",
+                          "ParsedNumber":  8,
+                          "ValidMod4":  true,
+                          "Type":  "Attribute"
+                      },
+                      {
+                          "File":  "C:\\Dev\\RummyBookyMaui\\RummyBooky\\Views\\PlayerCardView.xaml",
+                          "Property":  "Margin",
+                          "Value":  "16,8,16,8",
+                          "ParsedNumber":  16,
+                          "ValidMod4":  true,
+                          "Type":  "Attribute"
+                      },
+                      {
+                          "File":  "C:\\Dev\\RummyBookyMaui\\RummyBooky\\Views\\PlayerCardView.xaml",
+                          "Property":  "Margin",
+                          "Value":  "16,8,16,8",
+                          "ParsedNumber":  8,
+                          "ValidMod4":  true,
+                          "Type":  "Attribute"
+                      },
+                      {
+                          "File":  "C:\\Dev\\RummyBookyMaui\\RummyBooky\\Views\\PlayerCardView.xaml",
+                          "Property":  "Margin",
+                          "Value":  "16,8,16,8",
+                          "ParsedNumber":  16,
+                          "ValidMod4":  true,
+                          "Type":  "Attribute"
+                      },
+                      {
+                          "File":  "C:\\Dev\\RummyBookyMaui\\RummyBooky\\Views\\PlayerCardView.xaml",
+                          "Property":  "Margin",
+                          "Value":  "16,8,16,8",
+                          "ParsedNumber":  8,
+                          "ValidMod4":  true,
+                          "Type":  "Attribute"
+                      },
+                      {
+                          "File":  "C:\\Dev\\RummyBookyMaui\\RummyBooky\\Views\\PlayerCardView.xaml",
+                          "Property":  "ColumnSpacing",
+                          "Value":  "8",
+                          "ParsedNumber":  8,
+                          "ValidMod4":  true,
+                          "Type":  "Attribute"
+                      },
+                      {
+                          "File":  "C:\\Dev\\RummyBookyMaui\\RummyBooky\\Views\\PlayerCardView.xaml",
+                          "Property":  "ColumnSpacing",
+                          "Value":  "8",
+                          "ParsedNumber":  8,
+                          "ValidMod4":  true,
+                          "Type":  "Attribute"
+                      },
+                      {
+                          "File":  "C:\\Dev\\RummyBookyMaui\\RummyBooky\\Views\\PlayerCardView.xaml",
+                          "Property":  "RowSpacing",
+                          "Value":  "4",
+                          "ParsedNumber":  4,
+                          "ValidMod4":  true,
+                          "Type":  "Attribute"
+                      }
+                  ],
+    "Violations":  [
+
+                   ]
+}

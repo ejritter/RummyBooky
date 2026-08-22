@@ -1,43 +1,53 @@
 <?xml version="1.0" encoding="utf-8" ?>
-<pages:BasePage x:Name="thisPage" 
-                xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
-                xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
-                xmlns:pages="clr-namespace:RummyBooky.Pages"
-                xmlns:viewmodels="clr-namespace:RummyBooky.ViewModels"
-                xmlns:models="clr-namespace:RummyBooky.Models"
-                xmlns:views="clr-namespace:RummyBooky.Views"
-                x:Class="RummyBooky.Pages.EditPlayerPage"
-                x:DataType="viewmodels:EditPlayerViewModel"
-                x:TypeArguments="viewmodels:EditPlayerViewModel"
-                Loaded="Page_Loaded"
-                >
-    <VerticalStackLayout>
-        <Grid x:Name="GamesGrid"
-              ColumnDefinitions="*"  
-              RowDefinitions="*,50,*,*">
-            <views:PlayerCardView Grid.Row="0"
-                                  x:Name="PlayerCard"
-                                  AssignedPlayerModel="{Binding CurrentPlayer}"/>
-            <VerticalStackLayout Grid.Row="1" 
-                                 HorizontalOptions="Center"
-                                 MaximumWidthRequest="{Binding Source={x:Reference PlayerCard}, Path=Width}">
-                <Entry 
-                   Text="{Binding NewPlayerNameText}"
-                   HorizontalOptions="Center"
-                   Placeholder="Enter new name:"/>
-                <Button 
-                    Text="Remove Player"
-                    Command="{Binding RemovePlayerCommand}"
-                    />
-            </VerticalStackLayout>
-            <CollectionView Grid.Row="2"
-                            ItemsSource="{Binding PlayedGames}">
-                
-            </CollectionView>
-            <CollectionView Grid.Row="3"
-                            ItemsSource="{Binding ActiveGames}"></CollectionView>
+
+<pages:BasePage x:Name="thisPage" xmlns="http://schemas.microsoft.com/dotnet/2021/maui" xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml" xmlns:pages="clr-namespace:RummyBooky.Pages" xmlns:viewmodels="clr-namespace:RummyBooky.ViewModels" xmlns:models="clr-namespace:RummyBooky.Models" xmlns:views="clr-namespace:RummyBooky.Views" x:Class="RummyBooky.Pages.EditPlayerPage" x:DataType="viewmodels:EditPlayerViewModel" x:TypeArguments="viewmodels:EditPlayerViewModel" Background="{AppThemeBinding Light={StaticResource Slate50}, Dark={StaticResource Slate950}}" Loaded="Page_Loaded">
+
+    <!-- Single outer Grid replacing outer VerticalStackLayout and nested Grids -->
+    <Grid x:Name="MainLayoutGrid" Padding="16" RowSpacing="16" ColumnSpacing="16" RowDefinitions="Auto,Auto,*,*">
+
+        <!-- Player Profile Header View -->
+        <views:PlayerCardView Grid.Row="0" x:Name="PlayerCard" AssignedPlayerModel="{Binding CurrentPlayer}" IsVisible="{Binding DisplayGames}" />
+
+        <!-- Player Edit Form Controls (Auto row height to prevent entry/button clipping) -->
+        <Grid Grid.Row="1" RowSpacing="12" ColumnSpacing="12" RowDefinitions="Auto,Auto,Auto" HorizontalOptions="Center" WidthRequest="340" MaximumWidthRequest="400" IsVisible="{Binding DisplayGames}">
             
+            <Border Grid.Row="0" Style="{StaticResource TagEntryBorder}">
+                <Entry x:Name="EntryNewPlayerName" Text="{Binding NewPlayerNameText, Mode=TwoWay}" ReturnCommand="{Binding UpdatePlayerNameCommand}" ReturnType="Done" HorizontalOptions="Fill" Placeholder="Enter new name:" Style="{StaticResource TagEntry}">
+                </Entry>
+            </Border>
+
+            <Button x:Name="UpdatePlayerNameButton" Grid.Row="1" Text="Update Name" HorizontalOptions="Fill" Command="{Binding UpdatePlayerNameCommand}" Clicked="OnUpdatePlayerNameClicked">
+            </Button>
+
+            <Button x:Name="RemovePlayerButton" Grid.Row="2" Text="Remove Player" HorizontalOptions="Fill" Command="{Binding RemovePlayerCommand}" Clicked="OnRemovePlayerClicked">
+            </Button>
         </Grid>
-        <Grid x:Name="PlayersGrid"></Grid>
-    </VerticalStackLayout>
+
+        <!-- Played Games Collection -->
+        <CollectionView Grid.Row="2" ItemsSource="{Binding PlayedGames}" IsVisible="{Binding DisplayGames}">
+            <CollectionView.EmptyView>
+                <Label Text="No played games for this player" Style="{StaticResource CaptionLabelStyle}" TextColor="{AppThemeBinding Light={StaticResource Slate600}, Dark={StaticResource Slate400}}" HorizontalOptions="Center" VerticalOptions="Center" />
+            </CollectionView.EmptyView>
+        </CollectionView>
+
+        <!-- Active Games Collection -->
+        <CollectionView Grid.Row="3" ItemsSource="{Binding ActiveGames}" IsVisible="{Binding DisplayGames}">
+            <CollectionView.EmptyView>
+                <Label Text="No active games for this player" Style="{StaticResource CaptionLabelStyle}" TextColor="{AppThemeBinding Light={StaticResource Slate600}, Dark={StaticResource Slate400}}" HorizontalOptions="Center" VerticalOptions="Center" />
+            </CollectionView.EmptyView>
+        </CollectionView>
+
+        <!-- All Players List (when DisplayPlayers is true) -->
+        <CollectionView Grid.Row="0" Grid.RowSpan="4" ItemsSource="{Binding AllPlayers}" IsVisible="{Binding DisplayPlayers}">
+            <CollectionView.EmptyView>
+                <Label Text="No players available" Style="{StaticResource CaptionLabelStyle}" TextColor="{AppThemeBinding Light={StaticResource Slate600}, Dark={StaticResource Slate400}}" HorizontalOptions="Center" VerticalOptions="Center" />
+            </CollectionView.EmptyView>
+            <CollectionView.ItemTemplate>
+                <DataTemplate x:DataType="models:PlayerModel">
+                    <views:PlayerCardView AssignedPlayerModel="{Binding .}" />
+                </DataTemplate>
+            </CollectionView.ItemTemplate>
+        </CollectionView>
+    </Grid>
+
 </pages:BasePage>

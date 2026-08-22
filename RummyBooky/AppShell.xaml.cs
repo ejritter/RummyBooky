@@ -1,4 +1,4 @@
-﻿namespace RummyBooky;
+namespace RummyBooky;
 
 public partial class AppShell : Shell
 {
@@ -9,6 +9,6 @@ public partial class AppShell : Shell
         Routing.RegisterRoute(nameof(CurrentGamePage), typeof(CurrentGamePage));
         Routing.RegisterRoute(nameof(LeaderboardPage), typeof(LeaderboardPage));
         Routing.RegisterRoute(nameof(EditPlayerPage), typeof(EditPlayerPage));
-
+        Routing.RegisterRoute(nameof(EditGamePage), typeof(EditGamePage));
     }
 }

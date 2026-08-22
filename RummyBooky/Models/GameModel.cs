@@ -1,4 +1,4 @@
-﻿
+
 
 namespace RummyBooky.Models;
 
@@ -9,10 +9,12 @@ namespace RummyBooky.Models;
 public abstract partial class GameModel : BaseModel
 {
     public Guid GameId { get; init; } = Guid.NewGuid();
-    public ObservableCollection<PlayerModel> Players { get; set; } = new();
+    [ObservableProperty]
+    public partial ObservableCollection<PlayerModel> Players { get; set; } = new();
     [ObservableProperty]
     public  partial bool IsGameActive { get; set; } = true;
     [ObservableProperty] 
     public partial bool IsGameFinished { get; set; } = false;
-    public ObservableCollection<RoundModel> Round { get; set; } = new();
+    [ObservableProperty]
+    public partial ObservableCollection<RoundModel> Round { get; set; } = new();
 }

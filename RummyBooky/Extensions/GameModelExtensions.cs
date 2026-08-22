@@ -1,4 +1,4 @@
-﻿using RummyBooky.Models;
+using RummyBooky.Models;
 
 namespace RummyBooky.Extensions;
 
@@ -14,13 +14,7 @@ public static class GameModelExtensions
             Round =
                 { new RoundModel() { GameId = newGame.GameId} }//Brand new game. Should just be guid.
         };
-        var sortedList = new List<PlayerModel>(newGame.Players);
-        newGame.Players.Clear();
-        foreach (var player in sortedList.OrderBy(p => p.PlayerName))
-        {
-            newGame.Players.Add(player);
-        }
-        currentGameModel.Players = newGame.Players;
+        currentGameModel.Players = new ObservableCollection<PlayerModel>(newGame.Players);
         return currentGameModel;
     }
 

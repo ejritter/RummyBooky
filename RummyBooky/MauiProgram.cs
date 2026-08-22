@@ -1,4 +1,4 @@
-﻿namespace RummyBooky;
+namespace RummyBooky;
 
 public static class MauiProgram
 {
@@ -14,6 +14,8 @@ public static class MauiProgram
                 fonts.AddFont("OpenSans-Semibold.ttf", "OpenSansSemibold");
             });
 
+
+
         builder.Services.AddSingleton(AudioManager.Current);
         builder.Services.AddSingleton<IAppAudioService, AppAudioService>();
         builder.Services.AddSingleton<GameService>();
@@ -22,15 +24,17 @@ public static class MauiProgram
 
         builder.Services.AddSingleton<MainPageViewModel>();
         builder.Services.AddSingleton<MainPage>();
-        builder.Services.AddSingleton<NewGameViewModel>();
-        builder.Services.AddSingleton<NewGamePage>();
-        builder.Services.AddSingleton<LeaderboardViewModel>();
-        builder.Services.AddSingleton<LeaderboardPage>();
+        builder.Services.AddTransient<NewGameViewModel>();
+        builder.Services.AddTransient<NewGamePage>();
+        builder.Services.AddTransient<LeaderboardViewModel>();
+        builder.Services.AddTransient<LeaderboardPage>();
         
         builder.Services.AddTransient<EditPlayerViewModel>();
         builder.Services.AddTransient<EditPlayerPage>();
         builder.Services.AddTransient<CurrentGamePage>();
         builder.Services.AddTransient<CurrentGameViewModel>();
+        builder.Services.AddTransient<EditGameViewModel>();
+        builder.Services.AddTransient<EditGamePage>();
         
         return builder.Build();
     }

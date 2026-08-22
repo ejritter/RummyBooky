@@ -1,4 +1,4 @@
-﻿
+
 
 namespace RummyBooky.ViewModels;
 
@@ -36,7 +36,7 @@ public abstract class BaseViewModel(IPopupService popupService, GameService game
                                     options: new PopupOptions
                                     {
                                         CanBeDismissedByTappingOutsideOfPopup = isDismissable,
-                                        PageOverlayColor = CurrentTheme == AppTheme.Light ? Colors.White : Colors.Black
+                                        PageOverlayColor = GetPageOverlayColor()
                                     },
                                     shellParameters: queryAttributes);
         if (results is not null &&
@@ -48,5 +48,10 @@ public abstract class BaseViewModel(IPopupService popupService, GameService game
         {
             return new PopupResultsModel();
         }
+    }
+
+    private static Color GetPageOverlayColor()
+    {
+        return Color.FromRgba(0, 0, 0, 150);
     }
 }

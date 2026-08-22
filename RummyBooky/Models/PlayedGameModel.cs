@@ -1,9 +1,12 @@
-﻿namespace RummyBooky.Models;
+namespace RummyBooky.Models;
 
 public partial class PlayedGameModel : CurrentGameModel
 {
-    public PlayerModel? WinningPlayer { get; init; } = null;
-    public GameStatus GameState { get; init; }
+    [ObservableProperty]
+    public partial PlayerModel? WinningPlayer { get; set; } = null;
 
-    public DateTime GameEnd {get; init;}  = DateTime.Now;
+    [ObservableProperty]
+    public partial GameStatus GameState { get; set; }
+
+    public DateTime GameEnd { get; set; } = DateTime.Now;
 }

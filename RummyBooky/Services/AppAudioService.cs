@@ -1,4 +1,4 @@
-﻿
+
 namespace RummyBooky.Services;
 
 public class AppAudioService : IAppAudioService
@@ -14,8 +14,15 @@ public class AppAudioService : IAppAudioService
         _audioManager = audioManager;
     }
 
-    public void Mute() => _player.Volume = 0.0;
-    public void Unmute() => _player.Volume = 1.0;
+    public void Mute()
+    {
+        if (_player is not null) _player.Volume = 0.0;
+    }
+
+    public void Unmute()
+    {
+        if (_player is not null) _player.Volume = 1.0;
+    }
 
     public bool IsPlaying => _player?.IsPlaying ?? false;
 

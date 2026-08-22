@@ -1,4 +1,4 @@
-﻿using System.Collections.Immutable;
+using System.Collections.Immutable;
 
 namespace RummyBooky.ViewModels;
 
@@ -62,11 +62,14 @@ public partial class MainPageViewModel(IPopupService popupService, GameService g
         var gamesSorted = games
             .OrderBy(g => g.GameStart)
             .ToList<CurrentGameModel>();
-        ActiveGames.Clear();
-        foreach (var game in gamesSorted)
+        await MainThread.InvokeOnMainThreadAsync(() =>
         {
-            ActiveGames.Add(game);
-        }
+            ActiveGames.Clear();
+            foreach (var game in gamesSorted)
+            {
+                ActiveGames.Add(game);
+            }
+        });
         results = true;
         return results;
     }
@@ -75,11 +78,14 @@ public partial class MainPageViewModel(IPopupService popupService, GameService g
     {
         var results = false;
         var playedGames = await _gameService.LoadPlayedGamesAsync();
-        PlayedGames.Clear();
-        foreach( var game in playedGames)
+        await MainThread.InvokeOnMainThreadAsync(() =>
         {
-            PlayedGames.Add(game);
-        }
+            PlayedGames.Clear();
+            foreach( var game in playedGames)
+            {
+                PlayedGames.Add(game);
+            }
+        });
         results = true;
         return results;
     }
@@ -106,24 +112,52 @@ public partial class MainPageViewModel(IPopupService popupService, GameService g
     {
         try
         {
-            var results = false;
             if (SelectedGame is null)
-                return results;
+                return false;
+
+            if (SelectedGame.Players.Count < IntConstants.MinimumPlayerCount)
+            {
+                await ShowPopupAsync(title: "Invalid Game", message: "This game does not have enough players to resume.", isDismissable: true);
+                return false;
+            }
+
             await Shell.Current.GoToAsync(nameof(CurrentGamePage), new Dictionary<string, object>
             {
                 ["CurrentGame"] = SelectedGame
             });
-            results = true;
             SelectedGame = null;
-            return results;
+            return true;
         }
         catch (Exception ex)
         {
             await MainThread.InvokeOnMainThreadAsync(async () =>
             {
-                await ShowPopupAsync(title: "Error Resuming Game", message: ex.Message, isDismissable: false);
+                await ShowPopupAsync(title: "Error Resuming Game", message: ex.Message, isDismissable: true);
             });
-            throw;
+            return false;
+        }
+    }
+
+    [RelayCommand]
+    private async Task EditGame(GameModel? game)
+    {
+        var targetGame = game ?? SelectedGame;
+        if (targetGame is null)
+            return;
+
+        try
+        {
+            await Shell.Current.GoToAsync(nameof(EditGamePage), new Dictionary<string, object>
+            {
+                ["Game"] = targetGame
+            });
+        }
+        catch (Exception ex)
+        {
+            await MainThread.InvokeOnMainThreadAsync(async () =>
+            {
+                await ShowPopupAsync(title: "Error Opening Game Editor", message: ex.Message, isDismissable: true);
+            });
         }
     }
 }

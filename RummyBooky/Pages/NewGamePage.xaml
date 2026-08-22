@@ -1,170 +1,106 @@
 <?xml version="1.0" encoding="utf-8" ?>
-<pages:BasePage x:Name="thisPage"
-                xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
-                xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
-                xmlns:toolkit="http://schemas.microsoft.com/dotnet/2022/maui/toolkit"
-                xmlns:pages="clr-namespace:RummyBooky.Pages"
-                xmlns:viewmodels="clr-namespace:RummyBooky.ViewModels"
-                xmlns:models="clr-namespace:RummyBooky.Models"
-                xmlns:views="clr-namespace:RummyBooky.Views"
-                x:Class="RummyBooky.Pages.NewGamePage"
-                x:DataType="viewmodels:NewGameViewModel"
-                x:TypeArguments="viewmodels:NewGameViewModel"
-                >
-    <!-- Fixed heights for form rows and header; give the list the remaining space -->
-    <Grid HorizontalOptions="Center"
-          VerticalOptions="Start"
-          ColumnDefinitions="*,*"
-          ColumnSpacing="25"
-          RowDefinitions="100,100,90,Auto,*,90">
 
-        <Label Grid.Column="0"
-               Grid.Row="0"
-               Style="{StaticResource TagLabelNoBackground}"
-               Text="Score Limit" 
-               HorizontalOptions="Start"
-               VerticalOptions="Center"/>
-        <Border Grid.Row="0"
-                Grid.Column="1" 
-                HorizontalOptions="End"
-                Style="{StaticResource TagEntryBorder}">
-            <Entry x:Name="EntryScore" 
-                   Placeholder="{Binding ScoreBoundaries}"
-                   Style="{StaticResource TagEntry}"
-                   Text="{Binding ScoreLimitText, Mode=TwoWay}"
-                   Keyboard="Numeric"/>
-        </Border>
+<pages:BasePage x:Name="thisPage" xmlns="http://schemas.microsoft.com/dotnet/2021/maui" xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml" xmlns:toolkit="http://schemas.microsoft.com/dotnet/2022/maui/toolkit" xmlns:pages="clr-namespace:RummyBooky.Pages" xmlns:viewmodels="clr-namespace:RummyBooky.ViewModels" xmlns:models="clr-namespace:RummyBooky.Models" xmlns:views="clr-namespace:RummyBooky.Views" x:Class="RummyBooky.Pages.NewGamePage" x:DataType="viewmodels:NewGameViewModel" x:TypeArguments="viewmodels:NewGameViewModel" Background="{AppThemeBinding Light={StaticResource Slate50}, Dark={StaticResource Slate950}}">
 
-       <Label Grid.Column="0"
-              Grid.Row="1"
-              Style="{StaticResource TagLabelNoBackground}"
-              Text="Player Name"
-              HorizontalOptions="Start"
-              VerticalOptions="Center" />
-            
+    <ScrollView Padding="16">
+        <Grid HorizontalOptions="Center" VerticalOptions="Start" ColumnDefinitions="*,*" ColumnSpacing="24" RowSpacing="16" RowDefinitions="Auto,Auto,Auto,Auto,*,Auto" MaximumWidthRequest="700">
 
-        <Border Grid.Column="1"
-                Grid.Row="1"
-                HorizontalOptions="End"
-                Style="{StaticResource TagEntryBorder}">
-            <Entry x:Name="EntryPlayerName"
-                   Grid.Column="1"
-                   Grid.Row="1"
-                   Placeholder="{Binding PlayerBoundaries}"
-                   ReturnCommand="{Binding AddPlayerCommand}"
-                   ReturnCommandParameter="{Binding Source={x:Reference EntryPlayerName}}"
-                   Text="{Binding PlayerNameText, Mode=TwoWay}"
-                   Style="{StaticResource TagEntry}">
-                <Entry.Behaviors>
-                    <toolkit:UserStoppedTypingBehavior
-                        BindingContext="{Binding Path=BindingContext, Source={x:Reference EntryPlayerName}, x:DataType=Entry}"
-                        StoppedTypingTimeThreshold="3000"
-                        ShouldDismissKeyboardAutomatically="False"
-                        Command="{Binding UserStoppedTypingCommand}"
-                        /> 
-                </Entry.Behaviors>
+        <!-- Score Limit Input -->
+        <Label Grid.Column="0" Grid.Row="0" Style="{StaticResource TagLabelNoBackground}" Text="Score Limit" HorizontalOptions="Start" VerticalOptions="Center" />
+        <Border Grid.Row="0" Grid.Column="1" HorizontalOptions="Start" Style="{StaticResource TagEntryBorder}">
+            <Entry x:Name="EntryScore" Placeholder="{Binding ScoreBoundaries}" Style="{StaticResource TagEntry}" Text="{Binding ScoreLimitText, Mode=TwoWay}" Keyboard="Numeric" WidthRequest="180">
             </Entry>
         </Border>
 
-        <Border Grid.Column="1" 
-                Grid.Row="2" 
-                Style="{StaticResource TagButtonTransparentBorder}">
-            <Button Text="Add Player"
-                    WidthRequest="{Binding Source={x:Reference EntryScore}, Path=WidthRequest}"
-                    HorizontalOptions="End"
-                    Command="{Binding AddPlayerCommand}"
-                    CommandParameter="{Binding Source={x:Reference EntryPlayerName}}"/>
-        </Border>
+        <!-- Player Name Input -->
+        <Label Grid.Column="0" Grid.Row="1" Style="{StaticResource TagLabelNoBackground}" Text="Player Name" HorizontalOptions="Start" VerticalOptions="Center" />
 
-        <Border Grid.Row="3"
-                Grid.ColumnSpan="2"
-                HorizontalOptions="Start"
-                VerticalOptions="Start"
-                Style="{StaticResource TagEntryBorder}"
-                IsVisible="{Binding ShowPlayerSuggestions}"
-                >
-            <CarouselView
-                x:Name="SuggestedPlayersCollection"
-                ItemsSource="{Binding FilteredPlayerModelsByName}"
-                
-                IsSwipeEnabled="{Binding SwipeEnabled}"
-                PeekAreaInsets="0">
+        <Grid Grid.Column="1" Grid.Row="1" ColumnDefinitions="Auto,Auto" ColumnSpacing="12" HorizontalOptions="Start">
+            <Border Grid.Column="0" HorizontalOptions="Start" Style="{StaticResource TagEntryBorder}">
+                <Entry x:Name="EntryPlayerName" Placeholder="{Binding PlayerBoundaries}" ReturnCommand="{Binding SearchPlayerSuggestionsCommand}" Text="{Binding PlayerNameText, Mode=TwoWay}" Style="{StaticResource TagEntry}" ReturnType="Search" WidthRequest="180">
+                    <Entry.Behaviors>
+                        <toolkit:UserStoppedTypingBehavior StoppedTypingTimeThreshold="250" ShouldDismissKeyboardAutomatically="False" Command="{Binding UserStoppedTypingCommand}" />
+                    </Entry.Behaviors>
+                </Entry>
+            </Border>
+            <Button x:Name="SearchButton" Grid.Column="1" Text="🔍" FontSize="18" WidthRequest="48" HeightRequest="48" MinimumWidthRequest="48" MinimumHeightRequest="48" Padding="0" Command="{Binding SearchPlayerSuggestionsCommand}" VerticalOptions="Center" HorizontalOptions="Center" Clicked="OnSearchButtonClicked">
+            </Button>
+        </Grid>
+
+        <!-- Add Player Action Button (Border wrapper removed) -->
+        <Button x:Name="AddPlayerButton" Grid.Column="1" Grid.Row="2" Text="Add Player" WidthRequest="180" HorizontalOptions="Start" Command="{Binding AddPlayerCommand}" CommandParameter="{Binding Source={x:Reference EntryPlayerName}}" Clicked="OnAddPlayerClicked">
+        </Button>
+
+        <!-- Player Suggestions Carousel -->
+        <Grid Grid.Row="3" Grid.ColumnSpan="2" HorizontalOptions="Center" VerticalOptions="Start" IsVisible="{Binding ShowPlayerSuggestions}" HeightRequest="500" WidthRequest="360">
+            <CarouselView x:Name="SuggestedPlayersCollection"
+                          ItemsSource="{Binding FilteredPlayerModelsByName}"
+                          CurrentItem="{Binding SelectedSuggestedPlayerModel, Mode=TwoWay}"
+                          Position="{Binding SelectedSuggestedPlayerPosition, Mode=TwoWay}"
+                          IsSwipeEnabled="{Binding SwipeEnabled}"
+                          Loop="False"
+                          HorizontalOptions="Center"
+                          VerticalOptions="Center"
+                          HeightRequest="500"
+                          WidthRequest="360"
+                          PeekAreaInsets="0">
                 <CarouselView.ItemsLayout>
-                    <LinearItemsLayout Orientation="Horizontal"
-                                        SnapPointsType="Mandatory"
-                                        SnapPointsAlignment="Center" />
+                    <LinearItemsLayout Orientation="Horizontal" SnapPointsType="Mandatory" SnapPointsAlignment="Center" ItemSpacing="10" />
                 </CarouselView.ItemsLayout>
 
                 <CarouselView.ItemTemplate>
                     <DataTemplate x:DataType="models:PlayerModel">
-                        <VerticalStackLayout Spacing="10" Padding="8,4">
-                            <VerticalStackLayout.GestureRecognizers>
-                                <TapGestureRecognizer NumberOfTapsRequired="2"
-                                                        Command="{Binding Source={RelativeSource AncestorType={x:Type pages:NewGamePage}}, 
-                                                                Path=BindingContext.AddSuggestedPlayerCommand}" />
-                            </VerticalStackLayout.GestureRecognizers>
-                                        <views:PlayerCardView AssignedPlayerModel="{Binding .}"
-                                                                Command="{Binding Source={x:Reference thisPage}, Path=EditPlayerCommand}"
-                                                                />
-                                    </VerticalStackLayout>
+                        <Grid Padding="8,4" HorizontalOptions="Center" VerticalOptions="Center" WidthRequest="340" HeightRequest="480">
+                            <VisualStateManager.VisualStateGroups>
+                                <VisualStateGroup x:Name="CommonStates">
+                                    <VisualState x:Name="Normal">
+                                        <VisualState.Setters>
+                                            <Setter Property="Scale" Value="1.0" />
+                                        </VisualState.Setters>
+                                    </VisualState>
+                                    <VisualState x:Name="PointerOver">
+                                        <VisualState.Setters>
+                                            <Setter Property="Scale" Value="1.02" />
+                                            <Setter Property="Opacity" Value="0.95" />
+                                        </VisualState.Setters>
+                                    </VisualState>
+                                    <VisualState x:Name="Pressed">
+                                        <VisualState.Setters>
+                                            <Setter Property="Scale" Value="0.97" />
+                                            <Setter Property="Opacity" Value="0.85" />
+                                        </VisualState.Setters>
+                                    </VisualState>
+                                </VisualStateGroup>
+                            </VisualStateManager.VisualStateGroups>
+                            <Grid.GestureRecognizers>
+                                <TapGestureRecognizer NumberOfTapsRequired="2" Command="{Binding Source={RelativeSource AncestorType={x:Type pages:NewGamePage}}, Path=BindingContext.AddSuggestedPlayerCommand}" CommandParameter="{Binding .}" />
+                            </Grid.GestureRecognizers>
+                            <views:PlayerCardView AssignedPlayerModel="{Binding .}" WidthRequest="320" HeightRequest="460" Command="{Binding Source={RelativeSource AncestorType={x:Type viewmodels:NewGameViewModel}}, Path=EditPlayerCommand}" />
+                        </Grid>
                     </DataTemplate>
                 </CarouselView.ItemTemplate>
             </CarouselView>
-        </Border>
+        </Grid>
 
-        <!-- CollectionView with single header (renders once) and item template that aligns to the same columns -->
-        <CollectionView x:Name="PlayersCollection"
-                        Grid.ColumnSpan="2"
-                        Grid.Row="4"
-                        SelectionMode="Single"
-                        ItemsSource="{Binding GameModelTemplate.Players}"
-                        IsVisible="{Binding Source={x:Reference thisPage}, Path=BindingContext.ShowGridTemplate}"
-                        >
+        <!-- CollectionView with single header grid and item template -->
+        <CollectionView x:Name="PlayersCollection" Grid.ColumnSpan="2" Grid.Row="4" SelectionMode="Single" ItemsSource="{Binding GameModelTemplate.Players}" IsVisible="{Binding Source={x:Reference thisPage}, Path=BindingContext.ShowGridTemplate}">
 
-            <!-- single header grid (renders once) -->
+            <!-- Single header grid -->
             <CollectionView.Header>
-                <Grid 
-                      ColumnSpacing="0"
-                      ColumnDefinitions="*,2,120,2,120,2,120,2,120,2,120"
-                      RowDefinitions="65">
-                    <BoxView Grid.Row="0"
-                             Grid.Column="1"
-                             Grid.ColumnSpan="10"
-                             HorizontalOptions="Fill"
-                             VerticalOptions="Fill"
-                             Color="{AppThemeBinding Light={StaticResource Pink}, Dark={StaticResource DeepRed}}" />
+                <Grid ColumnSpacing="0" ColumnDefinitions="*,2,65,2,65,2,65,2,65,2,65" RowDefinitions="65">
+                    <BoxView Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="11" HorizontalOptions="Fill" VerticalOptions="Fill" Color="{AppThemeBinding Light={StaticResource DeepRed}, Dark={StaticResource Pink}}" />
 
-                    <Label Grid.Row="0" Grid.Column="2"
-                           Text="Played"
-                           Style="{StaticResource TagLabel}"
-                           VerticalOptions="Center"
-                           HorizontalOptions="Center"/>
+                    <Label Grid.Row="0" Grid.Column="0" Text="Player" Style="{StaticResource TagLabel}" VerticalOptions="Center" HorizontalOptions="Center" />
 
-                    <Label Grid.Row="0" Grid.Column="4"
-                           Text="Won"
-                           Style="{StaticResource TagLabel}"
-                           VerticalOptions="Center"
-                           HorizontalOptions="Center"/>
+                    <Label Grid.Row="0" Grid.Column="2" Text="Played" Style="{StaticResource TagLabel}" VerticalOptions="Center" HorizontalOptions="Center" />
 
-                    <Label Grid.Row="0" Grid.Column="6"
-                           Text="Lost"
-                           Style="{StaticResource TagLabel}"
-                           VerticalOptions="Center"
-                           HorizontalOptions="Center"/>
+                    <Label Grid.Row="0" Grid.Column="4" Text="Won" Style="{StaticResource TagLabel}" VerticalOptions="Center" HorizontalOptions="Center" />
 
-                    <Label Grid.Row="0" Grid.Column="8"
-                           Text="Draw"
-                           Style="{StaticResource TagLabel}"
-                           VerticalOptions="Center"
-                           HorizontalOptions="Center"/>
+                    <Label Grid.Row="0" Grid.Column="6" Text="Lost" Style="{StaticResource TagLabel}" VerticalOptions="Center" HorizontalOptions="Center" />
 
-                    <Label Grid.Row="0" Grid.Column="10"
-                           Text="Forfeit"
-                           Style="{StaticResource TagLabel}"
-                           VerticalOptions="Center"
-                           HorizontalOptions="Center"/>
+                    <Label Grid.Row="0" Grid.Column="8" Text="Draw" Style="{StaticResource TagLabel}" VerticalOptions="Center" HorizontalOptions="Center" />
 
-
+                    <Label Grid.Row="0" Grid.Column="10" Text="Forfeit" Style="{StaticResource TagLabel}" VerticalOptions="Center" HorizontalOptions="Center" />
                 </Grid>
             </CollectionView.Header>
 
@@ -174,169 +110,126 @@
                         <VisualStateManager.VisualStateGroups>
                             <VisualStateGroup x:Name="CommonStates">
                                 <VisualState x:Name="Normal">
+                                    <VisualState.Setters>
+                                        <Setter TargetName="ItemRoot" Property="VisualElement.BackgroundColor" Value="Transparent" />
+                                    </VisualState.Setters>
+                                </VisualState>
+                                <VisualState x:Name="PointerOver">
+                                    <VisualState.Setters>
+                                        <Setter TargetName="ItemRoot" Property="VisualElement.BackgroundColor" Value="{AppThemeBinding Light={StaticResource Slate100}, Dark={StaticResource Slate900}}" />
+                                    </VisualState.Setters>
+                                </VisualState>
+                                <VisualState x:Name="Pressed">
+                                    <VisualState.Setters>
+                                        <Setter TargetName="ItemRoot" Property="VisualElement.BackgroundColor" Value="{AppThemeBinding Light={StaticResource Slate50}, Dark={StaticResource Slate800}}" />
+                                    </VisualState.Setters>
                                 </VisualState>
                                 <VisualState x:Name="Selected">
                                     <VisualState.Setters>
-                                        <!-- pick your color or keep Transparent -->
-                                        <Setter TargetName="ItemRoot" Property="VisualElement.BackgroundColor"
-                                                    Value="{AppThemeBinding Light={x:StaticResource Pink}, Dark={x:StaticResource DeepRed}}" />
+                                        <Setter TargetName="ItemRoot" Property="VisualElement.BackgroundColor" Value="{AppThemeBinding Light={StaticResource Slate100}, Dark={StaticResource Slate900}}" />
                                     </VisualState.Setters>
                                 </VisualState>
                             </VisualStateGroup>
                         </VisualStateManager.VisualStateGroups>
-                        <SwipeView.RightItems>
-                            <SwipeItems Mode="Reveal"
-                                        SwipeBehaviorOnInvoked="Close"
-                                        >
-                                <SwipeItemView VerticalOptions="Center"
-                                               HorizontalOptions="End"
-                                               Command="{Binding Source={x:Reference thisPage}, Path=BindingContext.RemovePlayerCommand}"
-                                               CommandParameter="{Binding .}">
-                                    <Label VerticalOptions="Center" 
-                                           Text="Delete"
-                                           TextColor="{AppThemeBinding Light={StaticResource Pink}, Dark={StaticResource DeepRed}}"/>
-                                </SwipeItemView>
-
-                            </SwipeItems>
-                        </SwipeView.RightItems>
+                        
                         <SwipeView.LeftItems>
-                            <SwipeItems Mode="Reveal"
-                                        SwipeBehaviorOnInvoked="Close"
-                                        >
-                                <SwipeItemView VerticalOptions="Center"
-                                               HorizontalOptions="Start"
-                                               Command="{Binding Source={x:Reference thisPage}, Path=BindingContext.SetPlayerAsDealerCommand}"
-                                               CommandParameter="{Binding .}">
-                                    <Label VerticalOptions="Center" 
-                                           Text="Dealer"
-                                           TextColor="{AppThemeBinding Light={StaticResource Pink}, Dark={StaticResource DeepRed}}"/>
+                            <SwipeItems Mode="Reveal">
+                                <SwipeItemView Command="{Binding Source={x:Reference thisPage}, Path=BindingContext.RemovePlayerCommand}" CommandParameter="{Binding .}">
+                                    <VisualStateManager.VisualStateGroups>
+                                        <VisualStateGroup x:Name="SwipeDeleteStates">
+                                            <VisualState x:Name="Normal">
+                                                <VisualState.Setters>
+                                                    <Setter Property="BackgroundColor" Value="Transparent" />
+                                                </VisualState.Setters>
+                                            </VisualState>
+                                            <VisualState x:Name="PointerOver">
+                                                <VisualState.Setters>
+                                                    <Setter Property="BackgroundColor" Value="{AppThemeBinding Light={StaticResource Slate200}, Dark={StaticResource Slate800}}" />
+                                                </VisualState.Setters>
+                                            </VisualState>
+                                        </VisualStateGroup>
+                                    </VisualStateManager.VisualStateGroups>
+                                    <Label VerticalOptions="Center" Text="Delete" TextColor="{AppThemeBinding Light={StaticResource DeepRed}, Dark={StaticResource Pink}}" Padding="12,12" />
+                                </SwipeItemView>
+                                <SwipeItemView Command="{Binding Source={x:Reference thisPage}, Path=BindingContext.SetPlayerAsDealerCommand}" CommandParameter="{Binding .}">
+                                    <VisualStateManager.VisualStateGroups>
+                                        <VisualStateGroup x:Name="SwipeDealerStates">
+                                            <VisualState x:Name="Normal">
+                                                <VisualState.Setters>
+                                                    <Setter Property="BackgroundColor" Value="Transparent" />
+                                                </VisualState.Setters>
+                                            </VisualState>
+                                            <VisualState x:Name="PointerOver">
+                                                <VisualState.Setters>
+                                                    <Setter Property="BackgroundColor" Value="{AppThemeBinding Light={StaticResource Slate200}, Dark={StaticResource Slate800}}" />
+                                                </VisualState.Setters>
+                                            </VisualState>
+                                        </VisualStateGroup>
+                                    </VisualStateManager.VisualStateGroups>
+                                    <Label VerticalOptions="Center" Text="Dealer" TextColor="{AppThemeBinding Light={StaticResource DeepRed}, Dark={StaticResource Pink}}" Padding="12,12" />
                                 </SwipeItemView>
                             </SwipeItems>
                         </SwipeView.LeftItems>
 
-                        <!-- item grid: declares same columns and header row height (header row height = 65) -->
-                        <Grid x:Name="ItemRoot"
-                              ColumnSpacing="0"
-                              HorizontalOptions="Fill"
-                              ColumnDefinitions="*,2,120,2,120,2,120,2,120,2,120,2"
-                              RowDefinitions="65,*">
-                            <!-- For Desktop users, right click context menu options to delete or set dealer-->
+                        <!-- Item Data Grid -->
+                        <Grid x:Name="ItemRoot" ColumnSpacing="0" HorizontalOptions="Fill" ColumnDefinitions="*,2,65,2,65,2,65,2,65,2,65" RowDefinitions="65,1">
+                            
                             <FlyoutBase.ContextFlyout>
                                 <MenuFlyout>
-                                    <MenuFlyoutItem Text="Delete"
-                                                    Command="{Binding Source={x:Reference thisPage}, Path=BindingContext.RemovePlayerCommand}"
-                                                    CommandParameter="{Binding .}"/>
-                                    <MenuFlyoutItem Text="Dealer"
-                                                    Command="{Binding Source={x:Reference thisPage}, Path=BindingContext.SetPlayerAsDealerCommand}"
-                                                    CommandParameter="{Binding .}"/>
+                                    <MenuFlyoutItem Text="Delete" Command="{Binding Source={x:Reference thisPage}, Path=BindingContext.RemovePlayerCommand}" CommandParameter="{Binding .}" />
+                                    <MenuFlyoutItem Text="Dealer" Command="{Binding Source={x:Reference thisPage}, Path=BindingContext.SetPlayerAsDealerCommand}" CommandParameter="{Binding .}" />
                                 </MenuFlyout>
                             </FlyoutBase.ContextFlyout>
-                            <!-- Data row (row 0) -->
-                            <Image Grid.Row="0" Grid.Column="0"
-                                   VerticalOptions="Center"
-                                   HorizontalOptions="Start"
-                                   IsVisible="{Binding IsDealer}"
-                                   Style="{StaticResource DealerImage}" />
 
-                            <Label Grid.Row="0" Grid.Column="0"
-                                   Text="{Binding PlayerName}"
-                                   Style="{StaticResource PlayerLabel}"
-                                   VerticalOptions="Center"
-                                   HorizontalOptions="Center"/>
+                            <Grid Grid.Row="0" Grid.Column="0" ColumnDefinitions="Auto,*,Auto,Auto" ColumnSpacing="6" Padding="8,0">
+                                <Image Grid.Column="0" VerticalOptions="Center" HorizontalOptions="Start" IsVisible="{Binding IsDealer}" Style="{StaticResource DealerImage}" WidthRequest="22" HeightRequest="22" Margin="2,0" />
+                                <Label Grid.Column="1" Text="{Binding PlayerName}" Style="{StaticResource PlayerLabel}" VerticalOptions="Center" HorizontalOptions="Center" LineBreakMode="TailTruncation" />
+                                <Image Grid.Column="2" VerticalOptions="Center" HorizontalOptions="Center" WidthRequest="22" HeightRequest="22" Margin="4,0">
+                                    <Image.Triggers>
+                                        <DataTrigger TargetType="Image" Binding="{Binding IsNewPlayer}" Value="True">
+                                            <Setter Property="Source" Value="{AppThemeBinding Light=player_new_light.png, Dark=player_new_dark.png}" />
+                                            <Setter Property="ToolTipProperties.Text" Value="New Player" />
+                                        </DataTrigger>
+                                        <DataTrigger TargetType="Image" Binding="{Binding IsNewPlayer}" Value="False">
+                                            <Setter Property="Source" Value="{AppThemeBinding Light=player_existing_light.png, Dark=player_existing_dark.png}" />
+                                            <Setter Property="ToolTipProperties.Text" Value="Existing Player" />
+                                        </DataTrigger>
+                                    </Image.Triggers>
+                                </Image>
+                                <Button Grid.Column="3" Text="✕" FontSize="12" WidthRequest="28" HeightRequest="28" MinimumWidthRequest="28" MinimumHeightRequest="28" Padding="0" VerticalOptions="Center" HorizontalOptions="End" Command="{Binding Source={x:Reference thisPage}, Path=BindingContext.RemovePlayerCommand}" CommandParameter="{Binding .}" BackgroundColor="Transparent" TextColor="{AppThemeBinding Light={StaticResource DeepRed}, Dark={StaticResource Pink}}" ToolTipProperties.Text="Unselect / Remove Player" />
+                            </Grid>
 
-                            <BoxView Grid.RowSpan="2"
-                                     Grid.Column="1"
-                                     WidthRequest="1"
-                                     HorizontalOptions="Center"
-                                     VerticalOptions="Fill"
-                                     Color="{AppThemeBinding Light={StaticResource Pink}, Dark={StaticResource DeepRed}}" />
+                            <BoxView Grid.Row="0" Grid.Column="1" WidthRequest="1" HorizontalOptions="Center" VerticalOptions="Fill" Color="{AppThemeBinding Light={StaticResource Slate200}, Dark={StaticResource Slate700}}" />
 
-                            <Label Grid.Row="0" Grid.Column="2"
-                                   Text="{Binding TotalGamesPlayed}"
-                                   Style="{StaticResource PlayerLabel}"
-                                   VerticalOptions="Center"
-                                   HorizontalOptions="Center"/>
+                            <Label Grid.Row="0" Grid.Column="2" Text="{Binding TotalGamesPlayed}" Style="{StaticResource PlayerLabel}" VerticalOptions="Center" HorizontalOptions="Center" />
 
-                            <BoxView Grid.RowSpan="2"
-                                     Grid.Column="3"
-                                     WidthRequest="1"
-                                     HorizontalOptions="Center"
-                                     VerticalOptions="Fill"
-                                     Color="{AppThemeBinding Light={StaticResource Pink}, Dark={StaticResource DeepRed}}" />
+                            <BoxView Grid.Row="0" Grid.Column="3" WidthRequest="1" HorizontalOptions="Center" VerticalOptions="Fill" Color="{AppThemeBinding Light={StaticResource Slate200}, Dark={StaticResource Slate700}}" />
 
-                            <Label Grid.Row="0" Grid.Column="4"
-                                   Text="{Binding GamesWon}"
-                                   Style="{StaticResource PlayerLabel}"
-                                   VerticalOptions="Center"
-                                   HorizontalOptions="Center"/>
+                            <Label Grid.Row="0" Grid.Column="4" Text="{Binding GamesWon}" Style="{StaticResource PlayerLabel}" VerticalOptions="Center" HorizontalOptions="Center" />
 
-                            <BoxView Grid.RowSpan="2"
-                                     Grid.Column="5"
-                                     WidthRequest="1"
-                                     HorizontalOptions="Center"
-                                     VerticalOptions="Fill"
-                                     Color="{AppThemeBinding Light={StaticResource Pink}, Dark={StaticResource DeepRed}}" />
+                            <BoxView Grid.Row="0" Grid.Column="5" WidthRequest="1" HorizontalOptions="Center" VerticalOptions="Fill" Color="{AppThemeBinding Light={StaticResource Slate200}, Dark={StaticResource Slate700}}" />
 
-                            <Label Grid.Row="0" Grid.Column="6"
-                                   Text="{Binding GamesLost}"
-                                   Style="{StaticResource PlayerLabel}"
-                                   VerticalOptions="Center"
-                                   HorizontalOptions="Center"/>
+                            <Label Grid.Row="0" Grid.Column="6" Text="{Binding GamesLost}" Style="{StaticResource PlayerLabel}" VerticalOptions="Center" HorizontalOptions="Center" />
 
-                            <BoxView Grid.RowSpan="2"
-                                     Grid.Column="7"
-                                     WidthRequest="1"
-                                     HorizontalOptions="Center"
-                                     VerticalOptions="Fill"
-                                     Color="{AppThemeBinding Light={StaticResource Pink}, Dark={StaticResource DeepRed}}" />
+                            <BoxView Grid.Row="0" Grid.Column="7" WidthRequest="1" HorizontalOptions="Center" VerticalOptions="Fill" Color="{AppThemeBinding Light={StaticResource Slate200}, Dark={StaticResource Slate700}}" />
 
-                            <Label Grid.Row="0" Grid.Column="8"
-                                   Text="{Binding GameDraws}"
-                                   Style="{StaticResource PlayerLabel}"
-                                   VerticalOptions="Center"
-                                   HorizontalOptions="Center"/>
+                            <Label Grid.Row="0" Grid.Column="8" Text="{Binding GameDraws}" Style="{StaticResource PlayerLabel}" VerticalOptions="Center" HorizontalOptions="Center" />
 
-                            <BoxView Grid.RowSpan="2"
-                                     Grid.Column="9"
-                                     WidthRequest="1"
-                                     HorizontalOptions="Center"
-                                     VerticalOptions="Fill"
-                                     Color="{AppThemeBinding Light={StaticResource Pink}, Dark={StaticResource DeepRed}}" />
+                            <BoxView Grid.Row="0" Grid.Column="9" WidthRequest="1" HorizontalOptions="Center" VerticalOptions="Fill" Color="{AppThemeBinding Light={StaticResource Slate200}, Dark={StaticResource Slate700}}" />
 
-                            <Label Grid.Row="0" Grid.Column="10"
-                                   Text="{Binding GamesForfeit}"
-                                   Style="{StaticResource PlayerLabel}"
-                                   VerticalOptions="Center"
-                                   HorizontalOptions="Center"/>
+                            <Label Grid.Row="0" Grid.Column="10" Text="{Binding GamesForfeit}" Style="{StaticResource PlayerLabel}" VerticalOptions="Center" HorizontalOptions="Center" />
 
-                            <!-- Separator row under item -->
-                            <BoxView Grid.Row="1" Grid.Column ="0" Grid.ColumnSpan="11"
-                                     HeightRequest="1"
-                                     VerticalOptions="End"
-                                     HorizontalOptions="Fill"
-                                     Color="{AppThemeBinding Light={StaticResource Pink}, Dark={StaticResource DeepRed}}" />
+                            <BoxView Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="11" HeightRequest="1" VerticalOptions="End" HorizontalOptions="Fill" Color="{AppThemeBinding Light={StaticResource Slate200}, Dark={StaticResource Slate700}}" />
                         </Grid>
                     </SwipeView>
                 </DataTemplate>
             </CollectionView.ItemTemplate>
         </CollectionView>
 
-        <Border Grid.Column="1"
-                Grid.Row="5" 
-                Style="{StaticResource TagButtonTransparentBorder}">
-            <Button Text="Start Game"
-                    WidthRequest="{Binding Source={x:Reference EntryPlayerName}, Path=WidthRequest}"
-                    HorizontalOptions="End"
-                    Command="{Binding StartGameCommand}"/>
-        </Border>
-        <!-- enable for debugging -->
-    <CollectionView IsVisible="false" IsEnabled="false" BackgroundColor="Red" EmptyView="No players" ItemsSource="{Binding AllPlayerModels}" Grid.Row="6">
-            <CollectionView.ItemTemplate>
-                <DataTemplate x:DataType="models:PlayerModel">
-                    <Label Text="{Binding PlayerName}"/>
-                </DataTemplate>
-            </CollectionView.ItemTemplate>
-        </CollectionView>
+        <!-- Start Game Action Button (Border wrapper removed) -->
+        <Button x:Name="StartGameButton" Grid.Column="1" Grid.Row="5" Text="Start Game" WidthRequest="180" HorizontalOptions="Start" Command="{Binding StartGameCommand}" Clicked="OnStartGameClicked">
+        </Button>
     </Grid>
+    </ScrollView>
 
 </pages:BasePage>

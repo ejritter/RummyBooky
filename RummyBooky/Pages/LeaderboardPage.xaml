@@ -1,29 +1,22 @@
 <?xml version="1.0" encoding="utf-8" ?>
-<pages:BasePage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
-             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
-             xmlns:pages="clr-namespace:RummyBooky.Pages"
-             xmlns:viewmodels="clr-namespace:RummyBooky.ViewModels"
-             xmlns:models="clr-namespace:RummyBooky.Models"
-             xmlns:views="clr-namespace:RummyBooky.Views"
-             x:Class="RummyBooky.Pages.LeaderboardPage"
-             x:DataType="viewmodels:LeaderboardViewModel"
-             x:TypeArguments="viewmodels:LeaderboardViewModel">
-    <Grid RowDefinitions="Auto,*" ColumnDefinitions="*">
-        <Label Grid.Row="0"
-               Style="{StaticResource TagHeader}"
-               Text="{Binding HeaderText}"
-               HorizontalOptions="Center"/>
 
-        <CollectionView Grid.Row="1"
-                        Margin="0,30,0,0"
-                        ItemsSource="{Binding TopPlayers}"
-                        IsVisible="{Binding DisplayLeaderboard}">
-            <CollectionView.ItemTemplate>
-                <DataTemplate x:DataType="models:LeaderboardPlayerModel">
-                    <views:PlayerCardView AssignedPlayerModel="{Binding Player}"
-                                          Command="{Binding Source={RelativeSource AncestorType={x:Type viewmodels:LeaderboardViewModel}}, Path=EditPlayerCommand}" />
-                </DataTemplate>
-            </CollectionView.ItemTemplate>
-        </CollectionView>
-    </Grid>
+<pages:BasePage xmlns="http://schemas.microsoft.com/dotnet/2021/maui" xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml" xmlns:pages="clr-namespace:RummyBooky.Pages" xmlns:viewmodels="clr-namespace:RummyBooky.ViewModels" xmlns:models="clr-namespace:RummyBooky.Models" xmlns:views="clr-namespace:RummyBooky.Views" x:Class="RummyBooky.Pages.LeaderboardPage" x:DataType="viewmodels:LeaderboardViewModel" x:TypeArguments="viewmodels:LeaderboardViewModel" Background="{AppThemeBinding Light={StaticResource Slate50}, Dark={StaticResource Slate950}}">
+
+    <ScrollView Padding="16">
+        <VerticalStackLayout Spacing="16" HorizontalOptions="Center" MaximumWidthRequest="600">
+
+            <Label Style="{StaticResource TagHeader}" Text="{Binding HeaderText}" HorizontalOptions="Center" HorizontalTextAlignment="Center" LineBreakMode="WordWrap" />
+
+            <VerticalStackLayout BindableLayout.ItemsSource="{Binding TopPlayers}" Spacing="16" IsVisible="{Binding DisplayLeaderboard}">
+                <BindableLayout.ItemTemplate>
+                    <DataTemplate x:DataType="models:PlayerModel">
+                        <views:PlayerCardView AssignedPlayerModel="{Binding .}" Command="{Binding Source={RelativeSource AncestorType={x:Type viewmodels:LeaderboardViewModel}}, Path=EditPlayerCommand}" />
+                    </DataTemplate>
+                </BindableLayout.ItemTemplate>
+            </VerticalStackLayout>
+
+            <Button x:Name="RefreshButton" Text="Refresh Standings" HorizontalOptions="Center" WidthRequest="220" Command="{Binding AppearingCommand}" Clicked="OnRefreshClicked">
+            </Button>
+        </VerticalStackLayout>
+    </ScrollView>
 </pages:BasePage>

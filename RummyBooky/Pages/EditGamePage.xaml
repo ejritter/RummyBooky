@@ -1,0 +1,136 @@
+<?xml version="1.0" encoding="utf-8" ?>
+
+<pages:BasePage x:Name="thisPage"
+                xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+                xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+                xmlns:pages="clr-namespace:RummyBooky.Pages"
+                xmlns:viewmodels="clr-namespace:RummyBooky.ViewModels"
+                xmlns:models="clr-namespace:RummyBooky.Models"
+                x:Class="RummyBooky.Pages.EditGamePage"
+                x:DataType="viewmodels:EditGameViewModel"
+                x:TypeArguments="viewmodels:EditGameViewModel"
+                Background="{AppThemeBinding Light={StaticResource Slate50}, Dark={StaticResource Slate950}}">
+
+    <ScrollView Padding="16">
+        <Grid RowDefinitions="Auto,Auto,Auto,Auto,*"
+              RowSpacing="16"
+              HorizontalOptions="Fill"
+              VerticalOptions="Start"
+              MaximumWidthRequest="700">
+
+            <!-- Title & Game Status Header -->
+            <Grid Grid.Row="0" ColumnDefinitions="*,Auto" ColumnSpacing="16" VerticalOptions="Center">
+                <Label Grid.Column="0" Text="{Binding GameTitle}" Style="{StaticResource TagHeader}" VerticalOptions="Center" />
+            </Grid>
+
+            <!-- Game Settings Card -->
+            <Border Grid.Row="1" Style="{StaticResource ThemeBorder}" Padding="16">
+                <Grid RowDefinitions="Auto,Auto,Auto" RowSpacing="12">
+                    <!-- Status Picker -->
+                    <Grid Grid.Row="0" ColumnDefinitions="140,*" ColumnSpacing="12" VerticalOptions="Center">
+                        <Label Grid.Column="0" Text="Game Status:" Style="{StaticResource TagLabelNoBackground}" FontAttributes="Bold" VerticalOptions="Center" />
+                        <Border Grid.Column="1" Style="{StaticResource TagEntryBorder}" Padding="4,0">
+                            <Picker x:Name="StatusPicker"
+                                    Title="Select Status"
+                                    ItemsSource="{Binding StatusOptions}"
+                                    SelectedItem="{Binding SelectedStatus, Mode=TwoWay}"
+                                    VerticalOptions="Center" />
+                        </Border>
+                    </Grid>
+
+                    <!-- Winner Picker (visible when Won) -->
+                    <Grid Grid.Row="1" ColumnDefinitions="140,*" ColumnSpacing="12" VerticalOptions="Center" IsVisible="{Binding IsWinnerPickerVisible}">
+                        <Label Grid.Column="0" Text="Winning Player:" Style="{StaticResource TagLabelNoBackground}" FontAttributes="Bold" VerticalOptions="Center" />
+                        <Border Grid.Column="1" Style="{StaticResource TagEntryBorder}" Padding="4,0">
+                            <Picker x:Name="WinnerPicker"
+                                    Title="Select Winner"
+                                    ItemsSource="{Binding AvailablePlayers}"
+                                    ItemDisplayBinding="{Binding PlayerName}"
+                                    SelectedItem="{Binding SelectedWinner, Mode=TwoWay}"
+                                    VerticalOptions="Center" />
+                        </Border>
+                    </Grid>
+
+                    <!-- Score Limit Entry -->
+                    <Grid Grid.Row="2" ColumnDefinitions="140,*" ColumnSpacing="12" VerticalOptions="Center">
+                        <Label Grid.Column="0" Text="Score Limit:" Style="{StaticResource TagLabelNoBackground}" FontAttributes="Bold" VerticalOptions="Center" />
+                        <Border Grid.Column="1" Style="{StaticResource TagEntryBorder}" Padding="8,2" WidthRequest="120" HorizontalOptions="Start">
+                            <Entry x:Name="ScoreLimitEntry"
+                                   Text="{Binding ScoreLimit, Mode=TwoWay}"
+                                   Keyboard="Numeric"
+                                   Style="{StaticResource TagEntry}"
+                                   HorizontalTextAlignment="Center" />
+                        </Border>
+                    </Grid>
+                </Grid>
+            </Border>
+
+            <!-- Action Buttons -->
+            <Grid Grid.Row="2" ColumnDefinitions="*,*" ColumnSpacing="16">
+                <Button x:Name="SaveButton"
+                        Grid.Column="0"
+                        Text="Save Game"
+                        Command="{Binding SaveCommand}"
+                        Clicked="OnSaveClicked" />
+
+                <Button x:Name="CancelButton"
+                        Grid.Column="1"
+                        Text="Cancel"
+                        Command="{Binding CancelCommand}"
+                        Clicked="OnCancelClicked" />
+            </Grid>
+
+            <!-- Player Scores Summary -->
+            <Border Grid.Row="3" Style="{StaticResource ThemeBorder}" Padding="12">
+                <VerticalStackLayout Spacing="8">
+                    <Label Text="Current Player Totals" Style="{StaticResource TagLabelNoBackground}" FontAttributes="Bold" HorizontalOptions="Center" />
+                    <CollectionView ItemsSource="{Binding AvailablePlayers}" SelectionMode="None">
+                        <CollectionView.ItemTemplate>
+                            <DataTemplate x:DataType="models:PlayerModel">
+                                <Grid ColumnDefinitions="*,Auto" Padding="8,4">
+                                    <Label Grid.Column="0" Text="{Binding PlayerName}" Style="{StaticResource PlayerLabel}" VerticalOptions="Center" />
+                                    <Label Grid.Column="1" Text="{Binding PlayerScore, StringFormat='Total: {0}'}" Style="{StaticResource PlayerLabel}" FontAttributes="Bold" VerticalOptions="Center" />
+                                </Grid>
+                            </DataTemplate>
+                        </CollectionView.ItemTemplate>
+                    </CollectionView>
+                </VerticalStackLayout>
+            </Border>
+
+            <!-- Round-by-Round Score Matrix -->
+            <Border Grid.Row="4" Style="{StaticResource ThemeBorder}" Padding="16">
+                <VerticalStackLayout Spacing="12">
+                    <Label Text="Round Score Matrix" Style="{StaticResource TagLabelNoBackground}" FontAttributes="Bold" />
+
+                    <CollectionView ItemsSource="{Binding Rounds}" SelectionMode="None">
+                        <CollectionView.ItemTemplate>
+                            <DataTemplate x:DataType="viewmodels:EditRoundItemViewModel">
+                                <Border Style="{StaticResource ThemeBorder}" Margin="0,4" Padding="12">
+                                    <VerticalStackLayout Spacing="8">
+                                        <Label Text="{Binding RoundTitle}" Style="{StaticResource PlayerLabel}" FontAttributes="Bold" />
+
+                                        <CollectionView ItemsSource="{Binding PlayerScores}" SelectionMode="None">
+                                            <CollectionView.ItemTemplate>
+                                                <DataTemplate x:DataType="viewmodels:EditPlayerScoreItemViewModel">
+                                                    <Grid ColumnDefinitions="*,Auto" Padding="4,4" ColumnSpacing="12">
+                                                        <Label Grid.Column="0" Text="{Binding PlayerName}" Style="{StaticResource PlayerLabel}" VerticalOptions="Center" />
+                                                        <Border Grid.Column="1" Style="{StaticResource TagEntryBorder}" WidthRequest="80" HorizontalOptions="End">
+                                                            <Entry Text="{Binding ScoreText, Mode=TwoWay}"
+                                                                   Keyboard="Numeric"
+                                                                   HorizontalTextAlignment="Center"
+                                                                   Style="{StaticResource TagEntry}" />
+                                                        </Border>
+                                                    </Grid>
+                                                </DataTemplate>
+                                            </CollectionView.ItemTemplate>
+                                        </CollectionView>
+                                    </VerticalStackLayout>
+                                </Border>
+                            </DataTemplate>
+                        </CollectionView.ItemTemplate>
+                    </CollectionView>
+                </VerticalStackLayout>
+            </Border>
+        </Grid>
+    </ScrollView>
+</pages:BasePage>

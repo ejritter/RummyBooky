@@ -1,0 +1,21 @@
+# Progress Log
+
+- **Last visited**: 2026-08-21T19:39:45Z
+- **Current Task**: Writing comprehensive automated unit tests in `tests/RummyBooky.Tests/`
+- **Status**:
+  - [x] Initialized DISPATCH.md, BRIEFING.md, and local skill summary.
+  - [x] Verified baseline tests (`dotnet test` -> 75 passed) and build (`dotnet build` -> 0 errors, 0 warnings).
+  - [x] Authored `tests/RummyBooky.Tests/ComprehensiveGameEditingTests.cs` (18 test methods) covering:
+    - Tier 1: In-game round editing, real-time recomputations, score limits.
+    - Tier 2: Boundary & Corner cases (negative/zero scores, round 1 edit in 10-round game, 2-player vs 6-player games, score limits 100/5000/below current max, zero rounds game, tied highest hand, empty round scores fallback).
+    - Tier 3: Sequential multi-round editing, in-progress to won conversion with round edits.
+    - Tier 4: Real-world 4-player 5-round simulation with round 2 error corrected in round 4 changing leader and final winner.
+  - [x] Authored `tests/RummyBooky.Tests/TieResolutionAndStatsSyncTests.cs` (14 test methods) covering:
+    - Dedicated EditGamePage state changes & status transitions.
+    - Tie resolution with 2-way and 3-way ties above score limit, manual winner selection overriding draw.
+    - Forfeit vs Won vs Draw lifetime stats sync and global rankings.
+    - Won to Forfeit conversion and lifetime stats removal.
+    - Transition lifecycle (Won -> Draw -> Forfeit -> Won).
+    - Serialization & legacy save compatibility with polymorphic JSON discriminators.
+  - [x] Ran `dotnet test` (107/107 passed) and `dotnet build` (0 errors, 0 warnings).
+  - [ ] Write handoff report in `c:\Dev\RummyBookyMaui\.agents\test_writer_1\handoff.md`.

@@ -5,58 +5,113 @@
                 xmlns:models="clr-namespace:RummyBooky.Models"
                 x:Class="RummyBooky.Views.CardBoxView"
                 x:Name="thisCardBoxView">
-    <VerticalStackLayout>
-        <CollectionView x:Name="PlayersInCardBox"
-                        ItemsSource="{Binding Source={x:Reference thisCardBoxView}, Path=Players}"
-                        SelectionMode="None"
-                        >
+    <Grid RowDefinitions="Auto">
+        <Grid x:Name="CollapsedContainer"
+              IsVisible="True"
+              MinimumHeightRequest="44"
+              MinimumWidthRequest="44">
+            <VisualStateManager.VisualStateGroups>
+                <VisualStateGroup x:Name="CommonStates">
+                    <VisualState x:Name="Normal">
+                        <VisualState.Setters>
+                            <Setter Property="Scale" Value="1.0" />
+                            <Setter Property="Opacity" Value="1.0" />
+                        </VisualState.Setters>
+                    </VisualState>
+                    <VisualState x:Name="PointerOver">
+                        <VisualState.Setters>
+                            <Setter Property="Scale" Value="1.02" />
+                            <Setter Property="Opacity" Value="0.95" />
+                        </VisualState.Setters>
+                    </VisualState>
+                    <VisualState x:Name="Pressed">
+                        <VisualState.Setters>
+                            <Setter Property="Scale" Value="0.97" />
+                            <Setter Property="Opacity" Value="0.85" />
+                        </VisualState.Setters>
+                    </VisualState>
+                </VisualStateGroup>
+            </VisualStateManager.VisualStateGroups>
+            <Grid.GestureRecognizers>
+                <TapGestureRecognizer Tapped="OnCardBoxTapped" />
+            </Grid.GestureRecognizers>
 
-        </CollectionView>
-    </VerticalStackLayout>
-    <!-- Overlay layout -->
-    <!--<Grid>
+            <AbsoluteLayout x:Name="CardBoxLayout"
+                            HorizontalOptions="Center"
+                            VerticalOptions="Center">
+                <AbsoluteLayout x:Name="CollapsedCardsViewport"
+                                IsClippedToBounds="False"
+                                InputTransparent="True">
+                    <AbsoluteLayout x:Name="CollapsedCardsCanvas" />
+                </AbsoluteLayout>
 
-        --><!-- The "inside of the box" window (cards live here) --><!--
-        <Border x:Name="CardsWindow"
-                HorizontalOptions="Center"
-                VerticalOptions="End"
-                Margin="0,0,0,40"
-                Padding="20,95,20,85"
-                BackgroundColor="Transparent"
-                StrokeThickness="0">
+                <Image x:Name="CardBoxImage"
+                       Aspect="AspectFit" />
 
-            --><!-- Clip to the window so cards don't draw outside the box opening -->
-            <!--<Border.Clip>
-                <RectangleGeometry Rect="0,0,9999,9999" />
-            </Border.Clip>--><!--
+                <Label x:Name="GameStartedLabel"
+                       Text="{Binding CurrentGame.GameStart, StringFormat='Started: {0:MMM dd, yyyy}', Source={x:Reference thisCardBoxView}}"
+                       TextColor="{AppThemeBinding Light={StaticResource Slate900}, Dark={StaticResource Slate50}}"
+                       FontSize="12"
+                       HorizontalOptions="Center"
+                       VerticalOptions="Start"
+                       VerticalTextAlignment="Center" />
+            </AbsoluteLayout>
+        </Grid>
 
-            <CollectionView ItemsSource="{Binding Source={x:Reference thisCardBoxView}, Path=Players}"
-                            SelectionMode="None"
-                            VerticalOptions="Fill"
-                            HorizontalOptions="Fill">
+        <Grid x:Name="ExpandedContainer"
+              IsVisible="False"
+              ColumnDefinitions="Auto,*"
+              ColumnSpacing="16"
+              HorizontalOptions="Fill"
+              VerticalOptions="Fill">
+            <Image x:Name="EmptyCardBoxImage"
+                   Grid.Column="0"
+                   HorizontalOptions="Center"
+                   VerticalOptions="Start"
+                   Aspect="AspectFit"
+                   Margin="0,0,8,0"
+                   MinimumHeightRequest="44"
+                   MinimumWidthRequest="44"
+                   WidthRequest="100">
+                <VisualStateManager.VisualStateGroups>
+                    <VisualStateGroup x:Name="CommonStates">
+                        <VisualState x:Name="Normal">
+                            <VisualState.Setters>
+                                <Setter Property="Scale" Value="1.0" />
+                                <Setter Property="Opacity" Value="1.0" />
+                            </VisualState.Setters>
+                        </VisualState>
+                        <VisualState x:Name="PointerOver">
+                            <VisualState.Setters>
+                                <Setter Property="Scale" Value="1.05" />
+                                <Setter Property="Opacity" Value="0.9" />
+                            </VisualState.Setters>
+                        </VisualState>
+                        <VisualState x:Name="Pressed">
+                            <VisualState.Setters>
+                                <Setter Property="Scale" Value="0.95" />
+                                <Setter Property="Opacity" Value="0.8" />
+                            </VisualState.Setters>
+                        </VisualState>
+                    </VisualStateGroup>
+                </VisualStateManager.VisualStateGroups>
+                <Image.GestureRecognizers>
+                    <TapGestureRecognizer Tapped="OnEmptyCardBoxTapped" />
+                </Image.GestureRecognizers>
+            </Image>
 
-                <CollectionView.ItemsLayout>
-                    <LinearItemsLayout Orientation="Vertical" ItemSpacing="10" />
-                </CollectionView.ItemsLayout>
-
-                <CollectionView.ItemTemplate>
+            <VerticalStackLayout x:Name="ExpandedPlayersList"
+                                 Grid.Column="1"
+                                 Spacing="8"
+                                 VerticalOptions="Start"
+                                 HorizontalOptions="Fill"
+                                 Margin="8,0,0,0">
+                <BindableLayout.ItemTemplate>
                     <DataTemplate x:DataType="models:PlayerModel">
-                        <views:PlayerCardView AssignedPlayerModel="{Binding .}"
-                                              IsInCardBox="True"
-                                              HostWidthInset="70" />
+                        <views:PlayerCardView AssignedPlayerModel="{Binding .}" HorizontalOptions="Start" WidthRequest="320" />
                     </DataTemplate>
-                </CollectionView.ItemTemplate>
-            </CollectionView>
-        </Border>
-
-        --><!-- CardBox renders last so it appears in front --><!--
-        <Image x:Name="CardBox"
-               Style="{StaticResource CardBoxViewImage}"
-               HorizontalOptions="Center"
-               VerticalOptions="End"
-               Background="Transparent"
-               BackgroundColor="Transparent" />
-
-    </Grid>-->
-    
+                </BindableLayout.ItemTemplate>
+            </VerticalStackLayout>
+        </Grid>
+    </Grid>
 </views:BaseView>

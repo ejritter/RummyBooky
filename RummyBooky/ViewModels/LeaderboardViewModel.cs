@@ -1,4 +1,4 @@
-﻿using RummyBooky.Models;
+using RummyBooky.Models;
 
 namespace RummyBooky.ViewModels;
 
@@ -6,7 +6,7 @@ public partial class LeaderboardViewModel(IPopupService popupService, GameServic
     : BaseViewModel(popupService, gameService)
 {
 
-    public ObservableCollection<LeaderboardPlayerModel> TopPlayers { get; } = [];
+    public ObservableCollection<PlayerModel> TopPlayers { get; } = [];
 
     [ObservableProperty]
     public partial string HeaderText { get; set; } = "Leaderboard";
@@ -41,12 +41,8 @@ public partial class LeaderboardViewModel(IPopupService popupService, GameServic
         TopPlayers.Clear();
         foreach (var player in players)
         {
-            TopPlayers.Add(new LeaderboardPlayerModel
-            {
-                Player = player,
-            });
+            TopPlayers.Add(player);
         }
-
     }
 
     private async Task<bool> FLagDisplayLeaderboardBool()

@@ -1,13 +1,37 @@
-﻿
+
 
 namespace RummyBooky.ViewModels;
 
-[QueryProperty(nameof(CurrentGame), "CurrentGame")]
 public partial class CurrentGameViewModel(IPopupService popupService, GameService gameService)
-    : BaseViewModel(popupService, gameService)
+    : BaseViewModel(popupService, gameService), IQueryAttributable
 {
+    public void ApplyQueryAttributes(IDictionary<string, object> query)
+    {
+        Console.WriteLine($"[DEBUG_CURRENTGAME] VM ApplyQueryAttributes called. Query keys: {string.Join(", ", query.Keys)}");
+        if (query.TryGetValue("CurrentGame", out var gameObj))
+        {
+            Console.WriteLine($"[DEBUG_CURRENTGAME] VM ApplyQueryAttributes found CurrentGame type: {gameObj?.GetType().FullName}");
+            if (gameObj is CurrentGameModel gameModel)
+            {
+                Console.WriteLine($"[DEBUG_CURRENTGAME] VM ApplyQueryAttributes gameModel.Players count: {gameModel.Players?.Count ?? -1}");
+                CurrentGame = gameModel;
+                SyncPlayersCollection(gameModel);
+            }
+            else if (gameObj is NewGameModel newGame)
+            {
+                var converted = newGame.ConvertToCurrentGame();
+                CurrentGame = converted;
+                SyncPlayersCollection(converted);
+            }
+        }
+        else
+        {
+            Console.WriteLine("[DEBUG_CURRENTGAME] VM ApplyQueryAttributes: 'CurrentGame' NOT in query!");
+        }
+    }
     private RoundModel? _lastRoundSubscribed;
-
+    private readonly Dictionary<Guid, string> _activeRoundDraftScores = new();
+    private bool _isNavigatingRounds = false;
 
     [ObservableProperty]
     public partial bool DisplayPlayersHighestLowestHands { get; set; } = false;
@@ -25,7 +49,25 @@ public partial class CurrentGameViewModel(IPopupService popupService, GameServic
     public partial CurrentGameModel CurrentGame { get; set; } = new();
 
     [ObservableProperty]
+    public partial ObservableCollection<PlayerModel> Players { get; set; } = [];
+
+    [ObservableProperty]
     public partial RoundModel CurrentRound { get; set; }
+
+    [ObservableProperty]
+    public partial int SelectedRoundIndex { get; set; } = 0;
+
+    [ObservableProperty]
+    public partial bool IsViewingPreviousRound { get; set; } = false;
+
+    [ObservableProperty]
+    public partial bool IsNotViewingPreviousRound { get; set; } = true;
+
+    [ObservableProperty]
+    public partial bool CanGoToPreviousRound { get; set; } = false;
+
+    [ObservableProperty]
+    public partial bool CanGoToNextRound { get; set; } = false;
 
     [RelayCommand(CanExecute = nameof(CanExecuteCalculatePlayerScores))]
     private async Task<bool> CalculatePlayerScores(object sender)
@@ -55,18 +97,40 @@ public partial class CurrentGameViewModel(IPopupService popupService, GameServic
                 ScoredPlayers = CurrentRound.PlayersScoredHandThisRound.ToList() // copy
             };
 
-            // Apply mutations
-            await Task.WhenAll(CurrentGame.Players.Select(player => _gameService.SetPlayerScoreCurrentGameScoreAsync(player)));
-            await Task.WhenAll(CurrentGame.Players.Select(player => _gameService.SetPlayersHighestScoredHandAsync(player)));
-            await Task.WhenAll(CurrentGame.Players.Select(player => _gameService.SetPlayersLowestScoredHandAsync(player)));
+            // Apply mutations sequentially to avoid concurrency issues
+            foreach (var player in CurrentGame.Players)
+            {
+                await _gameService.SetPlayerScoreCurrentGameScoreAsync(player);
+                await _gameService.SetPlayersHighestScoredHandAsync(player);
+                await _gameService.SetPlayersLowestScoredHandAsync(player);
 
-            await Task.WhenAll(CurrentGame.Players.Select(player => _gameService.SetRoundHighestPlayedHandAsync(player, CurrentRound)));
-            await Task.WhenAll(CurrentGame.Players.Select(player => _gameService.SetRoundLowestPlayedHandAsync(player, CurrentRound)));
-            await Task.WhenAll(CurrentGame.Players.Select(player => _gameService.SetRoundLeadingPlayerAsync(player, CurrentRound)));
-            await Task.WhenAll(CurrentGame.Players.Select(player => _gameService.SetRoundPlayersScoredHandsAsync(player, CurrentRound)));
+                await _gameService.SetRoundHighestPlayedHandAsync(player, CurrentRound);
+                await _gameService.SetRoundLowestPlayedHandAsync(player, CurrentRound);
+                await _gameService.SetRoundLeadingPlayerAsync(player, CurrentRound);
+                await _gameService.SetRoundPlayersScoredHandsAsync(player, CurrentRound);
+            }
+
+            // Record round score models
+            foreach (var player in CurrentGame.Players)
+            {
+                if (int.TryParse(player.PlayerScoreText, out var scoreVal))
+                {
+                    var rs = CurrentRound.RoundScores.FirstOrDefault(r => r.PlayerId == player.ID);
+                    if (rs is null)
+                    {
+                        rs = new RoundScoreModel { PlayerId = player.ID, Score = scoreVal };
+                        CurrentRound.RoundScores.Add(rs);
+                    }
+                    else
+                    {
+                        rs.Score = scoreVal;
+                    }
+                }
+            }
 
             // Clear input scores (mutation)
             await Task.WhenAll(CurrentGame.Players.Select(player => _gameService.SetPlayersScoreTextToEmptyAsync(player)));
+            _activeRoundDraftScores.Clear();
 
             // Winners popup
             var winnerResults = await _gameService.CheckForWinnersAsync(CurrentGame);
@@ -116,28 +180,19 @@ public partial class CurrentGameViewModel(IPopupService popupService, GameServic
                         {
                             CurrentRound.PlayersScoredHandThisRound.Add(p);
                         }
-
-                        // Reorder back to appropriate display after rollback
-                        ReorderPlayersForDisplay();
                     });
 
                     // Do NOT create next round, do NOT save
                     return false;
                 }
 
-                // Reorder for display (Round > 1 typically by score)
-                await MainThread.InvokeOnMainThreadAsync(ReorderPlayersForDisplay);
-
-                // User confirmed winner: you might mark game finished and save here
-
+                // User confirmed winner: mark game finished and save here
                 if (popupResults.GameState == GameStatus.Won)
                 {
                     var playedGame = CurrentGame
                        .ConvertToPlayedGame(gameState: popupResults.GameState,
                                             winningPlayer: popupResults.SelectedWinner);
 
-                    ////Set winner stats here.
-                    //await _gameService.SetFinalStatsOfPlayedFinishedGame(playedGame);
                     await _gameService.SaveGameAsync(playedGame);
                 }
                 if (popupResults.GameState == GameStatus.Draw)
@@ -161,38 +216,35 @@ public partial class CurrentGameViewModel(IPopupService popupService, GameServic
             }
             else
             {
-                // No winner: proceed to next round and save
+                // No winner: proceed to next round, rotate dealer clockwise to player's left, and save
                 if (MainThread.IsMainThread)
                 {
-                    //CurrentGame = CurrentGame.CreateNextRoundTemplate();
-                    //CurrentRound = CurrentGame.Round.Last();
                     CurrentRound = CurrentGame
                         .CreateNextRoundTemplate()
                         .Round
                         .Last();
+                    SelectedRoundIndex = CurrentGame.Round.Count - 1;
+                    UpdateRoundNavigationState();
+                    await _gameService.SetNextDealerForNewRoundAsync(CurrentGame);
                     await _gameService.SaveGameAsync(CurrentGame);
                 }
                 else
                 {
                     await MainThread.InvokeOnMainThreadAsync(async () =>
                     {
-                        //CurrentGame = CurrentGame.CreateNextRoundTemplate();
-                        //CurrentRound = CurrentGame.Round.Last();
                         CurrentRound = CurrentGame
                             .CreateNextRoundTemplate()
                             .Round
                             .Last();
+                        SelectedRoundIndex = CurrentGame.Round.Count - 1;
+                        UpdateRoundNavigationState();
+                        await _gameService.SetNextDealerForNewRoundAsync(CurrentGame);
                         await _gameService.SaveGameAsync(CurrentGame);
                     });
                 }
 
-                RoundText = $"Round {CurrentGame.Round.Count}";
-
                 // Update visibility based on scored hands
                 DisplayPlayersHighestLowestHands = CurrentGame.Round.Count > 1;
-
-                // After moving to next round, ensure ordering is correct for display
-                ReorderPlayersForDisplay();
                 return true;
             }
         }
@@ -229,6 +281,9 @@ public partial class CurrentGameViewModel(IPopupService popupService, GameServic
 
     private bool CanExecuteCalculatePlayerScores()
     {
+        if (IsViewingPreviousRound)
+            return false;
+
         var results = false;
         foreach (var player in CurrentGame.Players)
         {
@@ -245,45 +300,215 @@ public partial class CurrentGameViewModel(IPopupService popupService, GameServic
     {
         if (value is not null)
         {
-            foreach (var player in value.Players)
+            if (value.Players != null)
+            {
+                foreach (var player in value.Players)
+                {
+                    player.PropertyChanged -= Player_PropertyChanged;
+                    player.PropertyChanged += Player_PropertyChanged;
+                }
+            }
+
+            _gameService.RecalculateGame(value);
+
+            SelectedRoundIndex = value.Round.Count > 0 ? value.Round.Count - 1 : 0;
+            CurrentRound = value.Round.Count > 0 ? value.Round[SelectedRoundIndex] : new RoundModel { GameId = value.GameId };
+            UpdateRoundNavigationState();
+
+            ScoreLimit = value.ScoreLimit;
+            GameStart = value.GameStart;
+            _ = CheckDealerStatus(value);
+            SyncPlayersCollection(value);
+        }
+    }
+
+    private void SyncPlayersCollection(CurrentGameModel? game)
+    {
+        MainThread.BeginInvokeOnMainThread(() =>
+        {
+            Players.Clear();
+            if (game?.Players != null)
+            {
+                foreach (var p in game.Players)
+                {
+                    Players.Add(p);
+                }
+            }
+            OnPropertyChanged(nameof(Players));
+            OnPropertyChanged(nameof(CurrentGame));
+        });
+    }
+
+    public async void OnAppearing()
+    {
+        if (CurrentGame != null && CurrentGame.GameId != Guid.Empty && CurrentGame.Players?.Count > 0)
+        {
+            foreach (var player in CurrentGame.Players)
             {
                 player.PropertyChanged -= Player_PropertyChanged;
                 player.PropertyChanged += Player_PropertyChanged;
             }
 
-            CurrentRound = value.Round.Last();
-            RoundText = $"Round {value.Round.Count}";
-            ScoreLimit = value.ScoreLimit;
-            GameStart = value.GameStart;
-            _ = CheckDealerStatus(value);
+            ScoreLimit = CurrentGame.ScoreLimit;
+            _gameService.RecalculateGame(CurrentGame);
+            UpdateRoundNavigationState();
+            SyncPlayersCollection(CurrentGame);
+            return;
+        }
+
+        var activeGames = await _gameService.LoadActiveGamesAsync();
+        var latest = activeGames.LastOrDefault();
+        if (latest != null && (CurrentGame == null || CurrentGame.GameId == Guid.Empty || CurrentGame.Players == null || CurrentGame.Players.Count == 0))
+        {
+            CurrentGame = latest;
+        }
+
+        if (CurrentGame != null)
+        {
+            if (CurrentGame.Players != null)
+            {
+                foreach (var player in CurrentGame.Players)
+                {
+                    player.PropertyChanged -= Player_PropertyChanged;
+                    player.PropertyChanged += Player_PropertyChanged;
+                }
+            }
+
+            ScoreLimit = CurrentGame.ScoreLimit;
+            _gameService.RecalculateGame(CurrentGame);
+            UpdateRoundNavigationState();
+            SyncPlayersCollection(CurrentGame);
         }
     }
-    private async Task<bool> CheckDealerStatus(CurrentGameModel value)
+
+    private void UpdateRoundNavigationState()
     {
-        var results = false;
-        var roundCount = value.Round.Count;
-        var dealerFound = value.Players.FirstOrDefault(p => p.IsDealer);
-        //if no dealer set, and it is round 1, call set random dealer.
-        if(dealerFound is null && roundCount == 1)
+        if (CurrentGame?.Round is null || CurrentGame.Round.Count == 0)
         {
-            return results = await _gameService.SetRandomDealerForCurrentGameAsync(value);
+            CanGoToPreviousRound = false;
+            CanGoToNextRound = false;
+            IsViewingPreviousRound = false;
+            IsNotViewingPreviousRound = true;
+            return;
         }
-        //if dealer is set, and it is round 1, do nothing
-        if(dealerFound is not null && roundCount == 1)
+
+        int activeIndex = CurrentGame.Round.Count - 1;
+        IsViewingPreviousRound = SelectedRoundIndex < activeIndex;
+        IsNotViewingPreviousRound = !IsViewingPreviousRound;
+        CanGoToPreviousRound = SelectedRoundIndex > 0;
+        CanGoToNextRound = SelectedRoundIndex < activeIndex;
+
+        if (IsViewingPreviousRound)
         {
-            return results = true;
+            RoundText = $"Round {SelectedRoundIndex + 1} of {CurrentGame.Round.Count} (Editing)";
         }
-        //if dealer is set and it is round 2+, call set next dealer.
-        if (dealerFound is not null && roundCount > 1)
-        {
-            return results = await _gameService.SetNextDealerForNewRoundAsync(value);
-        }
-        //should not hit this, but default incase. 
         else
         {
-            return results = await _gameService.SetRandomDealerForCurrentGameAsync(value);
+            RoundText = $"Round {CurrentGame.Round.Count}";
+        }
+
+        CalculatePlayerScoresCommand.NotifyCanExecuteChanged();
+    }
+
+    [RelayCommand]
+    private async Task PreviousRound()
+    {
+        if (SelectedRoundIndex > 0 && CurrentGame.Round.Count > 0)
+        {
+            int activeIndex = CurrentGame.Round.Count - 1;
+            if (SelectedRoundIndex == activeIndex)
+            {
+                _activeRoundDraftScores.Clear();
+                foreach (var p in CurrentGame.Players)
+                {
+                    _activeRoundDraftScores[p.ID] = p.PlayerScoreText;
+                }
+            }
+
+            SelectedRoundIndex--;
+            _isNavigatingRounds = true;
+            var targetRound = CurrentGame.Round[SelectedRoundIndex];
+            foreach (var p in CurrentGame.Players)
+            {
+                var rs = targetRound.RoundScores.FirstOrDefault(r => r.PlayerId == p.ID);
+                p.PlayerScoreText = rs != null ? rs.Score.ToString() : "0";
+            }
+            _isNavigatingRounds = false;
+
+            CurrentRound = targetRound;
+            UpdateRoundNavigationState();
         }
     }
+
+    [RelayCommand]
+    private async Task NextRound()
+    {
+        int activeIndex = CurrentGame.Round.Count - 1;
+        if (SelectedRoundIndex < activeIndex)
+        {
+            SelectedRoundIndex++;
+            _isNavigatingRounds = true;
+            if (SelectedRoundIndex == activeIndex)
+            {
+                foreach (var p in CurrentGame.Players)
+                {
+                    p.PlayerScoreText = _activeRoundDraftScores.TryGetValue(p.ID, out var draft) ? draft : string.Empty;
+                }
+            }
+            else
+            {
+                var targetRound = CurrentGame.Round[SelectedRoundIndex];
+                foreach (var p in CurrentGame.Players)
+                {
+                    var rs = targetRound.RoundScores.FirstOrDefault(r => r.PlayerId == p.ID);
+                    p.PlayerScoreText = rs != null ? rs.Score.ToString() : "0";
+                }
+            }
+            _isNavigatingRounds = false;
+
+            CurrentRound = CurrentGame.Round[SelectedRoundIndex];
+            UpdateRoundNavigationState();
+        }
+    }
+
+    [RelayCommand]
+    private async Task ReturnToActiveRound()
+    {
+        if (CurrentGame?.Round is null || CurrentGame.Round.Count == 0)
+            return;
+
+        int activeIndex = CurrentGame.Round.Count - 1;
+        SelectedRoundIndex = activeIndex;
+        _isNavigatingRounds = true;
+        foreach (var p in CurrentGame.Players)
+        {
+            p.PlayerScoreText = _activeRoundDraftScores.TryGetValue(p.ID, out var draft) ? draft : string.Empty;
+        }
+        _isNavigatingRounds = false;
+
+        CurrentRound = CurrentGame.Round[activeIndex];
+        UpdateRoundNavigationState();
+    }
+
+    [RelayCommand]
+    private async Task EditGame()
+    {
+        await Shell.Current.GoToAsync(nameof(EditGamePage), new Dictionary<string, object>
+        {
+            ["Game"] = CurrentGame
+        });
+    }
+
+    private async Task<bool> CheckDealerStatus(CurrentGameModel value)
+    {
+        var dealerFound = value.Players.FirstOrDefault(p => p.IsDealer);
+        if (dealerFound is null)
+        {
+            return await _gameService.SetRandomDealerForCurrentGameAsync(value);
+        }
+        return true;
+    }
+
     partial void OnCurrentRoundChanged(RoundModel value)
     {
         if (value is not null)
@@ -294,12 +519,9 @@ public partial class CurrentGameViewModel(IPopupService popupService, GameServic
                 player.PropertyChanged += Player_PropertyChanged;
             }
 
-            RoundText = $"Round {CurrentGame.Round.Count}";
-
             SubscribeRoundObservers(value);
             _ = CheckDealerStatus(CurrentGame);
             UpdateHighestLowestVisibility();
-            ReorderPlayersForDisplay();
         }
     }
 
@@ -361,7 +583,8 @@ public partial class CurrentGameViewModel(IPopupService popupService, GameServic
     [RelayCommand]
     private async Task GoToMainPage()
     {
-        await Shell.Current.GoToAsync($"//{nameof(MainPage)}");
+        await _gameService.SaveGameAsync(CurrentGame);
+        await Shell.Current.GoToAsync($"///{nameof(MainPage)}");
     }
 
     [RelayCommand]
@@ -388,45 +611,41 @@ public partial class CurrentGameViewModel(IPopupService popupService, GameServic
     {
         if (e.PropertyName == nameof(PlayerModel.PlayerScoreText))
         {
-            CalculatePlayerScoresCommand.NotifyCanExecuteChanged();
+            if (_isNavigatingRounds)
+                return;
+
+            if (IsViewingPreviousRound && sender is PlayerModel modifiedPlayer)
+            {
+                if (int.TryParse(modifiedPlayer.PlayerScoreText, out int newScore))
+                {
+                    if (SelectedRoundIndex >= 0 && SelectedRoundIndex < CurrentGame.Round.Count)
+                    {
+                        var round = CurrentGame.Round[SelectedRoundIndex];
+                        var rs = round.RoundScores.FirstOrDefault(r => r.PlayerId == modifiedPlayer.ID);
+                        if (rs is null)
+                        {
+                            rs = new RoundScoreModel { PlayerId = modifiedPlayer.ID, Score = newScore };
+                            round.RoundScores.Add(rs);
+                        }
+                        else
+                        {
+                            rs.Score = newScore;
+                        }
+
+                        _gameService.RecalculateGame(CurrentGame);
+                        _ = _gameService.SaveGameAsync(CurrentGame);
+                        UpdateHighestLowestVisibility();
+                    }
+                }
+            }
+            else
+            {
+                CalculatePlayerScoresCommand.NotifyCanExecuteChanged();
+            }
         }
     }
 
-    // Reorders CurrentGame.Players to match UI rules:
-    // Round 1: alphabetical by PlayerName; Round > 1: by PlayerScore desc.
-    private void ReorderPlayersForDisplay()
-    {
-        if (CurrentGame is null || CurrentGame.Players is null)
-        {
-            return;
-        }
-
-        var roundCount = CurrentGame.Round?.Count ?? 0;
-
-        IEnumerable<PlayerModel> ordered =
-            roundCount <= 1
-                ? CurrentGame.Players.OrderBy(p => p.PlayerName, StringComparer.CurrentCultureIgnoreCase)
-                : CurrentGame.Players.OrderByDescending(p => p.PlayerScore);
-
-        // Apply ordering in-place to preserve the same ObservableCollection instance (important for bindings)
-        var orderedList = ordered.ToList();
-
-        // If already in this order, skip touching the collection
-        bool sameOrder = CurrentGame.Players.SequenceEqual(orderedList);
-        if (sameOrder)
-        {
-            return;
-        }
-
-        // Rebuild the collection in the new order
-        CurrentGame.Players.Clear();
-        foreach (var p in orderedList)
-        {
-            CurrentGame.Players.Add(p);
-        }
-    }
-
-        [RelayCommand]
+    [RelayCommand]
     private async Task<bool> SetPlayerAsDealer(PlayerModel playerModel)
     {
         var results = false;
@@ -445,6 +664,4 @@ public partial class CurrentGameViewModel(IPopupService popupService, GameServic
         }
         return results;
     }
-
-
 }

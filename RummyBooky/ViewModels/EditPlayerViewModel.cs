@@ -1,8 +1,14 @@
-﻿namespace RummyBooky.ViewModels;
+namespace RummyBooky.ViewModels;
 
-[QueryProperty(nameof(CurrentPlayer), nameof(CurrentPlayer))]
-public sealed partial class EditPlayerViewModel(IPopupService popupService, GameService gameService) : BaseViewModel(popupService, gameService)
+public sealed partial class EditPlayerViewModel(IPopupService popupService, GameService gameService) : BaseViewModel(popupService, gameService), IQueryAttributable
 {
+    public void ApplyQueryAttributes(IDictionary<string, object> query)
+    {
+        if (query.TryGetValue("CurrentPlayer", out var playerObj) && playerObj is PlayerModel playerModel)
+        {
+            CurrentPlayer = playerModel;
+        }
+    }
     #region properties
     [ObservableProperty]
     public partial bool DisplayGames { get; set; } = false;
@@ -12,9 +18,11 @@ public sealed partial class EditPlayerViewModel(IPopupService popupService, Game
 
     [ObservableProperty]
     [NotifyCanExecuteChangedFor(nameof(RemovePlayerCommand))]
+    [NotifyCanExecuteChangedFor(nameof(UpdatePlayerNameCommand))]
     public partial PlayerModel CurrentPlayer { get; set; } = null;
 
     [ObservableProperty]
+    [NotifyCanExecuteChangedFor(nameof(UpdatePlayerNameCommand))]
     public partial string NewPlayerNameText { get; set; } = string.Empty;
 
     public ObservableCollection<GameModel> ActiveGames { get; set; } = [];
@@ -24,6 +32,31 @@ public sealed partial class EditPlayerViewModel(IPopupService popupService, Game
     #endregion
 
     #region commands
+    [RelayCommand(CanExecute = nameof(CanExecuteUpdatePlayerNameCommand))]
+    public async Task UpdatePlayerName()
+    {
+        if (CurrentPlayer is null || string.IsNullOrWhiteSpace(NewPlayerNameText))
+            return;
+
+        var newName = NewPlayerNameText.Trim();
+        if (string.Equals(newName, CurrentPlayer.PlayerName, StringComparison.Ordinal))
+            return;
+
+        var oldName = CurrentPlayer.PlayerName;
+        var success = await _gameService.UpdatePlayerNameHistory(CurrentPlayer, newName);
+        if (success)
+        {
+            CurrentPlayer.PlayerName = newName;
+            NewPlayerNameText = string.Empty;
+            await LoadGameCollectionsWithSelectedPlayer(CurrentPlayer);
+            _ = await ShowPopupAsync(title: "Success", message: $"Player '{oldName}' updated to '{newName}'.", isDismissable: true);
+        }
+        else
+        {
+            _ = await ShowPopupAsync(title: "Warning", message: "Failed to update player name. Please consult the logs.", isDismissable: false);
+        }
+    }
+
     [RelayCommand(CanExecute = nameof(CanExecuteRemoveCommand))]
     public async Task RemovePlayer()
     {
@@ -51,25 +84,36 @@ public sealed partial class EditPlayerViewModel(IPopupService popupService, Game
     [RelayCommand]
     public async Task PageLoaded()
     {
-        var activeGamesTask = gameService.LoadActiveGamesAsync();
-        var playedGamesTask = gameService.LoadPlayedGamesAsync();
-        var allPlayersTask = gameService.GetAllPlayerModelsArray();
         if (CurrentPlayer is not null)
         {
             DisplayPlayers = false;
             DisplayGames = true;
-            await Task.WhenAll(activeGamesTask, playedGamesTask);
-            var activeGamesList = await activeGamesTask;
-            var playedGamesList = await playedGamesTask;
-            var results = await IdentifyPlayerInGames(activeGamesList, playedGamesList);
-            LoadGameCollectionsWithPlayerName(results.activeGamesFound, results.playedGamesFound);
+            await LoadGameCollectionsWithSelectedPlayer(CurrentPlayer);
         }
         else
         {
             DisplayPlayers = true;
             DisplayGames = false;
-            var allPlayerList = await allPlayersTask;
-            AllPlayers = new ObservableCollection<PlayerModel>(allPlayerList);
+            var allPlayerList = await gameService.GetAllPlayerModelsArray();
+            if (MainThread.IsMainThread)
+            {
+                AllPlayers.Clear();
+                foreach (var player in allPlayerList)
+                {
+                    AllPlayers.Add(player);
+                }
+            }
+            else
+            {
+                MainThread.BeginInvokeOnMainThread(() =>
+                {
+                    AllPlayers.Clear();
+                    foreach (var player in allPlayerList)
+                    {
+                        AllPlayers.Add(player);
+                    }
+                });
+            }
         }
     }
     #endregion
@@ -85,12 +129,15 @@ public sealed partial class EditPlayerViewModel(IPopupService popupService, Game
     }
     partial void OnCurrentPlayerChanged(PlayerModel oldValue, PlayerModel newValue)
     {
-        Task.Run(async () =>
+        if (newValue is not null)
         {
-            _ = await LoadGameCollectionsWithSelectedPlayer(newValue);
-        });
-        DisplayGames = true;
-        DisplayPlayers = false;
+            Task.Run(async () =>
+            {
+                _ = await LoadGameCollectionsWithSelectedPlayer(newValue);
+            });
+            DisplayGames = true;
+            DisplayPlayers = false;
+        }
     }
     private async Task<bool> LoadGameCollectionsWithSelectedPlayer(PlayerModel selectedPlayer)
     {
@@ -109,23 +156,36 @@ public sealed partial class EditPlayerViewModel(IPopupService popupService, Game
     {
         var activeGamesFound = new List<CurrentGameModel>();
         var playedGamesFound = new List<GameModel>();
+        if (CurrentPlayer == null)
+        {
+            return (activeGamesFound, playedGamesFound);
+        }
+
         foreach (CurrentGameModel game in activeGamesList)
         {
-            foreach (PlayerModel player in game.Players)
+            if (game?.Players != null)
             {
-                if (player.ID == CurrentPlayer.ID)
+                foreach (PlayerModel player in game.Players)
                 {
-                    activeGamesFound.Add(game);
+                    if (player?.ID == CurrentPlayer.ID)
+                    {
+                        activeGamesFound.Add(game);
+                        break;
+                    }
                 }
             }
         }
         foreach (GameModel game in playedGamesList)
         {
-            foreach (PlayerModel player in game.Players)
+            if (game?.Players != null)
             {
-                if (player.ID == CurrentPlayer.ID)
+                foreach (PlayerModel player in game.Players)
                 {
-                    playedGamesFound.Add(game);
+                    if (player?.ID == CurrentPlayer.ID)
+                    {
+                        playedGamesFound.Add(game);
+                        break;
+                    }
                 }
             }
         }
@@ -134,31 +194,27 @@ public sealed partial class EditPlayerViewModel(IPopupService popupService, Game
     }
     private bool LoadGameCollectionsWithPlayerName(List<CurrentGameModel> activeGamesList, List<GameModel> playedGamesList)
     {
-        if (MainThread.IsMainThread)
+        void Populate()
         {
-            foreach (CurrentGameModel game in activeGamesList)
+            ActiveGames.Clear();
+            PlayedGames.Clear();
+            foreach (var game in activeGamesList)
             {
                 ActiveGames.Add(game);
             }
-            foreach (PlayedGameModel game in playedGamesList)
+            foreach (var game in playedGamesList)
             {
                 PlayedGames.Add(game);
             }
         }
+
+        if (MainThread.IsMainThread)
+        {
+            Populate();
+        }
         else
         {
-            MainThread.BeginInvokeOnMainThread(() =>
-            {
-                foreach (CurrentGameModel game in activeGamesList)
-                {
-                    ActiveGames.Add(game);
-                }
-                foreach (PlayedGameModel game in playedGamesList)
-                {
-                    PlayedGames.Add(game);
-                }
-
-            });
+            MainThread.BeginInvokeOnMainThread(Populate);
         }
         return true;
     }
@@ -167,6 +223,12 @@ public sealed partial class EditPlayerViewModel(IPopupService popupService, Game
     {
         return CurrentPlayer is not null;
     }
-    #endregion
 
+    private bool CanExecuteUpdatePlayerNameCommand()
+    {
+        return CurrentPlayer is not null &&
+               !string.IsNullOrWhiteSpace(NewPlayerNameText) &&
+               !string.Equals(NewPlayerNameText.Trim(), CurrentPlayer.PlayerName, StringComparison.Ordinal);
+    }
+    #endregion
 }

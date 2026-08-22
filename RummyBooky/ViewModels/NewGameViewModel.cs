@@ -1,10 +1,12 @@
-﻿namespace RummyBooky.ViewModels;
+namespace RummyBooky.ViewModels;
 
 public partial class NewGameViewModel(IPopupService popupService, GameService gameService)
         : BaseViewModel(popupService, gameService)
 {
 
     
+    private CancellationTokenSource? _searchCts;
+
     [ObservableProperty]
     public partial bool SwipeEnabled { get; set; } = false;
 
@@ -14,7 +16,8 @@ public partial class NewGameViewModel(IPopupService popupService, GameService ga
     [ObservableProperty] 
     public partial PlayerModel[] AllPlayerModels { get; set; } = [];
 
-    public  ObservableCollection<PlayerModel> FilteredPlayerModelsByName { get; set; } = [];
+    [ObservableProperty]
+    public partial ObservableCollection<PlayerModel> FilteredPlayerModelsByName { get; set; } = [];
 
     [ObservableProperty]
     public partial PlayerModel? SelectedSuggestedPlayerModel { get; set; } = null;
@@ -23,24 +26,30 @@ public partial class NewGameViewModel(IPopupService popupService, GameService ga
     [NotifyPropertyChangedFor(nameof(ShowGridTemplate))]
     public partial bool ShowPlayerSuggestions { get; set; } = false;
 
+    [ObservableProperty]
+    public partial int SelectedSuggestedPlayerPosition { get; set; } = 0;
+
     [RelayCommand]
     private async Task Appearing()
     {
-        GameModelTemplate = _gameService.GetNewGameModel();
+        GameModelTemplate ??= _gameService.GetNewGameModel();
+        await _gameService.LoadAllPlayersDictionaryAsync();
         AllPlayerModels = await _gameService.GetAllPlayerModelsArray();
+        GameModelTemplate.Players.CollectionChanged -= Players_CollectionChanged;
         GameModelTemplate.Players.CollectionChanged += Players_CollectionChanged;
-        FilteredPlayerModelsByName.CollectionChanged += FilteredPlayerModelsByName_CollectionChanged;
     }
-
-    
 
     [RelayCommand]
     private async Task Disappearing()
     {
+        _searchCts?.Cancel();
+        _searchCts?.Dispose();
+        _searchCts = null;
+
         GameModelTemplate.Players.CollectionChanged -= Players_CollectionChanged;
-        FilteredPlayerModelsByName.CollectionChanged -= FilteredPlayerModelsByName_CollectionChanged;
-        FilteredPlayerModelsByName.Clear();
+        FilteredPlayerModelsByName = [];
         SelectedSuggestedPlayerModel = null;
+        SelectedSuggestedPlayerPosition = 0;
         ShowPlayerSuggestions = false;
     }
     partial void OnShowPlayerSuggestionsChanged(bool oldValue, bool newValue)
@@ -72,49 +81,73 @@ public partial class NewGameViewModel(IPopupService popupService, GameService ga
     }
 
     [RelayCommand]
-    public async Task UserStoppedTyping()
+    public async Task SearchPlayerSuggestions()
     {
-        if (GameModelTemplate.Players.Count >= IntConstants.MaximumPlayerCount)
-            return;
+        _searchCts?.Cancel();
+        _searchCts?.Dispose();
+        _searchCts = null;
 
-        SelectedSuggestedPlayerModel = null;
-        FilteredPlayerModelsByName.Clear();
-
-        if (string.IsNullOrWhiteSpace(PlayerNameText))
-            return;
-
-        var matches = AllPlayerModels
-            .Where(p => p.PlayerName.StartsWith(PlayerNameText, StringComparison.OrdinalIgnoreCase) &&
-                        GameModelTemplate.Players.Any(gp => gp.ID == p.ID) == false)
-            .ToList();
-
-        if (MainThread.IsMainThread)
-        {
-            foreach (var player in matches)
-                FilteredPlayerModelsByName.Add(player);
-        }
-        else
-        {
-            await MainThread.InvokeOnMainThreadAsync(() =>
-            {
-                foreach (var player in matches)
-                    FilteredPlayerModelsByName.Add(player);
-            });
-        }
-
-        SelectedSuggestedPlayerModel = FilteredPlayerModelsByName.FirstOrDefault();
+        await PerformSearchAsync(PlayerNameText, CancellationToken.None);
     }
 
-    private void FilteredPlayerModelsByName_CollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
+    [RelayCommand]
+    public async Task UserStoppedTyping()
     {
-        ShowPlayerSuggestions = FilteredPlayerModelsByName.Count > 0;
-        SwipeEnabled = FilteredPlayerModelsByName.Count > 1;
+        _searchCts?.Cancel();
+        _searchCts?.Dispose();
+        _searchCts = new CancellationTokenSource();
+        var token = _searchCts.Token;
 
-        if (SelectedSuggestedPlayerModel is not null &&
-            FilteredPlayerModelsByName.Contains(SelectedSuggestedPlayerModel) == false)
+        await PerformSearchAsync(PlayerNameText, token);
+    }
+
+    private async Task PerformSearchAsync(string query, CancellationToken token)
+    {
+        if (GameModelTemplate == null || GameModelTemplate.Players.Count >= IntConstants.MaximumPlayerCount)
+            return;
+
+        if (AllPlayerModels == null || AllPlayerModels.Length == 0)
         {
-            SelectedSuggestedPlayerModel = FilteredPlayerModelsByName.FirstOrDefault();
+            await _gameService.LoadAllPlayersDictionaryAsync();
+            AllPlayerModels = await _gameService.GetAllPlayerModelsArray();
         }
+
+        if (string.IsNullOrWhiteSpace(query))
+        {
+            MainThread.BeginInvokeOnMainThread(() =>
+            {
+                FilteredPlayerModelsByName = [];
+                SelectedSuggestedPlayerModel = null;
+                SelectedSuggestedPlayerPosition = 0;
+                ShowPlayerSuggestions = false;
+                SwipeEnabled = false;
+            });
+            return;
+        }
+
+        var currentAddedIds = GameModelTemplate.Players.Select(p => p.ID).ToHashSet();
+        var trimmedQuery = query.Trim();
+        var matches = AllPlayerModels
+            .Where(p => p != null && !string.IsNullOrEmpty(p.PlayerName) &&
+                        (p.PlayerName.StartsWith(trimmedQuery, StringComparison.OrdinalIgnoreCase) ||
+                         p.PlayerName.Contains(trimmedQuery, StringComparison.OrdinalIgnoreCase)) &&
+                        !currentAddedIds.Contains(p.ID))
+            .ToList();
+
+        if (token.IsCancellationRequested)
+            return;
+
+        MainThread.BeginInvokeOnMainThread(() =>
+        {
+            if (token.IsCancellationRequested)
+                return;
+
+            FilteredPlayerModelsByName = new ObservableCollection<PlayerModel>(matches);
+            SelectedSuggestedPlayerModel = matches.FirstOrDefault();
+            SelectedSuggestedPlayerPosition = 0;
+            ShowPlayerSuggestions = matches.Count > 0;
+            SwipeEnabled = matches.Count > 1;
+        });
     }
 
     public string ScoreBoundaries { get; init; } = $"{IntConstants.MinimumScoreLimit} - {IntConstants.MaximumScoreLimit}";
@@ -127,7 +160,7 @@ public partial class NewGameViewModel(IPopupService popupService, GameService ga
 
     [ObservableProperty]
     [NotifyCanExecuteChangedFor(nameof(StartGameCommand))]
-    public partial string ScoreLimitText { get; set; } = string.Empty;
+    public partial string ScoreLimitText { get; set; } = "500";
 
     [ObservableProperty]
     [NotifyCanExecuteChangedFor(nameof(AddPlayerCommand))]
@@ -136,21 +169,55 @@ public partial class NewGameViewModel(IPopupService popupService, GameService ga
 
     partial void OnPlayerNameTextChanged(string value)
     {
-        SelectedSuggestedPlayerModel = null;
-        FilteredPlayerModelsByName.Clear();
-        ShowPlayerSuggestions = false;
-        SwipeEnabled = false;
+        _searchCts?.Cancel();
+        _searchCts?.Dispose();
+        _searchCts = new CancellationTokenSource();
+        var token = _searchCts.Token;
+
         CanAddPlayer();
         AddPlayerCommand.NotifyCanExecuteChanged();
+
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            MainThread.BeginInvokeOnMainThread(() =>
+            {
+                FilteredPlayerModelsByName = [];
+                SelectedSuggestedPlayerModel = null;
+                SelectedSuggestedPlayerPosition = 0;
+                ShowPlayerSuggestions = false;
+                SwipeEnabled = false;
+            });
+            return;
+        }
+
+        Task.Run(async () =>
+        {
+            try
+            {
+                await Task.Delay(150, token);
+                if (!token.IsCancellationRequested)
+                {
+                    await PerformSearchAsync(value, token);
+                }
+            }
+            catch (OperationCanceledException)
+            {
+                // Ignored
+            }
+        }, token);
     }
     partial void OnScoreLimitTextChanged(string value)
     {
-        CanStartGame();
+        StartGameCommand.NotifyCanExecuteChanged();
     }
+
+    public PlayerModel? LastAddedPlayer { get; set; }
+    public string LastSearchQuery { get; set; } = string.Empty;
 
     private bool CanAddPlayer()
     {
-        var results = !string.IsNullOrEmpty(PlayerNameText) &&
+        var results = !string.IsNullOrWhiteSpace(PlayerNameText) &&
+                        GameModelTemplate != null &&
                         GameModelTemplate.Players.Count < IntConstants.MaximumPlayerCount;
         return results;
     }
@@ -161,6 +228,7 @@ public partial class NewGameViewModel(IPopupService popupService, GameService ga
                         int.TryParse(ScoreLimitText, out scoreLimitInt) &&
                         scoreLimitInt >= IntConstants.MinimumScoreLimit &&
                         scoreLimitInt <= IntConstants.MaximumScoreLimit &&
+                        GameModelTemplate != null &&
                         GameModelTemplate.Players.Count >= IntConstants.MinimumPlayerCount;
         return results;
     }
@@ -172,27 +240,43 @@ public partial class NewGameViewModel(IPopupService popupService, GameService ga
     [RelayCommand(CanExecute = nameof(CanAddPlayer))]
     private async Task<bool> AddPlayer(Entry entry)
     {
-        var results = await _gameService.AddPlayerToNewGameAsync(GameModelTemplate, PlayerNameText);
+        var query = PlayerNameText.Trim();
+        LastSearchQuery = query;
+        var results = await _gameService.AddPlayerToNewGameAsync(GameModelTemplate, query);
+        LastAddedPlayer = GameModelTemplate.Players.LastOrDefault();
         PlayerNameText = string.Empty;
-        FilteredPlayerModelsByName.Clear();
-        //HighlightedSuggestedPlayer = null;
-        CanStartGame();
+        FilteredPlayerModelsByName = [];
+        SelectedSuggestedPlayerModel = null;
+        SelectedSuggestedPlayerPosition = 0;
+        ShowPlayerSuggestions = false;
+        StartGameCommand.NotifyCanExecuteChanged();
         if (GameModelTemplate.Players.Count == IntConstants.MaximumPlayerCount)
         {
-            entry.Unfocus();
-            await entry.HideKeyboardAsync();
+            entry?.Unfocus();
+            if (entry != null)
+            {
+                await entry.HideKeyboardAsync();
+            }
         }
         return results;
     }
 
     [RelayCommand]
-    private async Task<bool> AddSuggestedPlayer()
+    private async Task<bool> AddSuggestedPlayer(PlayerModel? player = null)
     {
-        var results = await _gameService.AddExistingPlayerModelToNewGameAsync(GameModelTemplate, SelectedSuggestedPlayerModel);
+        var targetPlayer = player ?? SelectedSuggestedPlayerModel;
+        if (targetPlayer is null)
+            return false;
+
+        LastSearchQuery = PlayerNameText.Trim();
+        var results = await _gameService.AddExistingPlayerModelToNewGameAsync(GameModelTemplate, targetPlayer);
+        LastAddedPlayer = GameModelTemplate.Players.LastOrDefault();
         PlayerNameText = string.Empty;
-        FilteredPlayerModelsByName.Clear();
+        FilteredPlayerModelsByName = [];
         SelectedSuggestedPlayerModel = null;
-        CanStartGame();
+        SelectedSuggestedPlayerPosition = 0;
+        ShowPlayerSuggestions = false;
+        StartGameCommand.NotifyCanExecuteChanged();
         if (GameModelTemplate.Players.Count == IntConstants.MaximumPlayerCount)
         {
            await HideKeyboard();
@@ -200,32 +284,48 @@ public partial class NewGameViewModel(IPopupService popupService, GameService ga
         return results;
     }
 
-
-
     [RelayCommand(CanExecute = nameof(CanStartGame))]
     private async Task StartGame()
     {
         await HideKeyboard();
+
+        // If no dealer is selected, prompt the user to choose or assign random
+        var currentDealer = GameModelTemplate.Players.FirstOrDefault(p => p.IsDealer);
+        if (currentDealer == null)
+        {
+            var promptTitle = GameModelTemplate.Players.Count == 2 ? "First Dealer" : "Starting Dealer";
+            var promptMessage = GameModelTemplate.Players.Count == 2
+                ? "Select who will deal first (or Cancel for random):"
+                : "Select the starting dealer (seating order rotates clockwise to player's left, or Cancel for random):";
+
+            var choice = await ShowPopupAsync(
+                title: promptTitle,
+                message: promptMessage,
+                players: GameModelTemplate.Players.ToList(),
+                isDismissable: true);
+
+            if (choice.Confirmed && choice.SelectedWinner != null)
+            {
+                await _gameService.SetGamesDealerAsync(GameModelTemplate, choice.SelectedWinner);
+            }
+            else
+            {
+                await _gameService.SetRandomDealerForCurrentGameAsync(GameModelTemplate);
+            }
+        }
+
+        Console.WriteLine($"[DEBUG_NEWGAME] StartGame: GameModelTemplate.Players count before fresh = {GameModelTemplate.Players.Count}");
         await _gameService.CreateFreshPlayerTemplatesForCurrentGame(GameModelTemplate);
+        Console.WriteLine($"[DEBUG_NEWGAME] StartGame: GameModelTemplate.Players count after fresh = {GameModelTemplate.Players.Count}");
         var currentGame = GameModelTemplate.ConvertToCurrentGame();
-        //currentGame.Round.Add(currentGame);
+        Console.WriteLine($"[DEBUG_NEWGAME] StartGame: currentGame.Players count = {currentGame.Players.Count}");
         await _gameService.SetCurrentGameScoreLimitAsync(currentGame, int.Parse(ScoreLimitText));
         await _gameService.SaveGameAsync(currentGame);
-        if (MainThread.IsMainThread)
-        {
-            ResetNewGameViewModelStates();
-        }
-        else
-        {
-            MainThread.BeginInvokeOnMainThread(() =>
-            {
-                ResetNewGameViewModelStates();
-            });
-        }
         await Shell.Current.GoToAsync(nameof(CurrentGamePage), new Dictionary<string, object>
         {
             ["CurrentGame"] = currentGame
         });
+        ResetNewGameViewModelStates();
 
     }
 
@@ -262,21 +362,46 @@ public partial class NewGameViewModel(IPopupService popupService, GameService ga
 
     private void ResetNewGameViewModelStates()
     {
+        _searchCts?.Cancel();
+        _searchCts?.Dispose();
+        _searchCts = null;
         ShowGridTemplate = false;
         GameModelTemplate = null;
-        ScoreLimitText = string.Empty;
-        FilteredPlayerModelsByName.Clear();
-        //HighlightedSuggestedPlayer = null;
+        ScoreLimitText = "500";
+        FilteredPlayerModelsByName = [];
+        SelectedSuggestedPlayerModel = null;
+        SelectedSuggestedPlayerPosition = 0;
+        ShowPlayerSuggestions = false;
+        LastAddedPlayer = null;
+        LastSearchQuery = string.Empty;
         GameModelTemplate = _gameService.GetNewGameModel();
     }
 
     [RelayCommand]
     private async Task<bool> RemovePlayer(PlayerModel playerModel)
     {
+        if (playerModel is null)
+            return false;
+
         var results = false;
         await _gameService.RemovePlayerFromNewGameAsync(GameModelTemplate, playerModel);
         StartGameCommand.NotifyCanExecuteChanged();
         AddPlayerCommand.NotifyCanExecuteChanged();
+
+        // If this player was just added and we had an active search query, restore search
+        if (playerModel == LastAddedPlayer && !string.IsNullOrWhiteSpace(LastSearchQuery))
+        {
+            var queryToRestore = LastSearchQuery;
+            LastAddedPlayer = null;
+            LastSearchQuery = string.Empty;
+            PlayerNameText = queryToRestore;
+            await SearchPlayerSuggestions();
+        }
+        else if (playerModel == LastAddedPlayer)
+        {
+            LastAddedPlayer = null;
+        }
+
         results = true;
         return results;
     }

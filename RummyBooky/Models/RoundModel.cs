@@ -1,4 +1,4 @@
-﻿namespace RummyBooky.Models;
+namespace RummyBooky.Models;
 
 public partial class RoundModel : BaseModel
 {
@@ -22,4 +22,5 @@ public partial class RoundModel : BaseModel
     public partial int CurrentLowestScoredHandValue { get; set; } = int.MaxValue;
 
     public ObservableCollection<PlayerModel> PlayersScoredHandThisRound { get; set; } = [];
+    public ObservableCollection<RoundScoreModel> RoundScores { get; set; } = [];
 }
