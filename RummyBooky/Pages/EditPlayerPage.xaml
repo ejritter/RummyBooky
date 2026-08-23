@@ -12,7 +12,7 @@
         <Grid Grid.Row="1" RowSpacing="12" ColumnSpacing="12" RowDefinitions="Auto,Auto,Auto" HorizontalOptions="Center" WidthRequest="340" MaximumWidthRequest="400" IsVisible="{Binding DisplayGames}">
             
             <Border Grid.Row="0" Style="{StaticResource TagEntryBorder}">
-                <Entry x:Name="EntryNewPlayerName" Text="{Binding NewPlayerNameText, Mode=TwoWay}" ReturnCommand="{Binding UpdatePlayerNameCommand}" ReturnType="Done" HorizontalOptions="Fill" Placeholder="Enter new name:" Style="{StaticResource TagEntry}">
+                <Entry x:Name="EntryNewPlayerName" Text="{Binding NewPlayerNameText, Mode=TwoWay}" ReturnCommand="{Binding UpdatePlayerNameCommand}" ReturnType="Done" HorizontalOptions="Fill" HorizontalTextAlignment="Center" FontSize="16" Placeholder="Enter new name" Style="{StaticResource TagEntry}">
                 </Entry>
             </Border>
 
@@ -28,6 +28,17 @@
             <CollectionView.EmptyView>
                 <Label Text="No played games for this player" Style="{StaticResource CaptionLabelStyle}" TextColor="{AppThemeBinding Light={StaticResource Slate600}, Dark={StaticResource Slate400}}" HorizontalOptions="Center" VerticalOptions="Center" />
             </CollectionView.EmptyView>
+            <CollectionView.ItemTemplate>
+                <DataTemplate x:DataType="models:GameModel">
+                    <Grid RowDefinitions="Auto,Auto" RowSpacing="8" Padding="12,8">
+                        <Grid Grid.Row="0" ColumnDefinitions="*,Auto" ColumnSpacing="12" VerticalOptions="Center">
+                            <Label Grid.Column="0" Text="Completed Game" Style="{StaticResource CaptionLabelStyle}" TextColor="{AppThemeBinding Light={StaticResource Slate600}, Dark={StaticResource Slate400}}" HorizontalOptions="Start" VerticalOptions="Center" />
+                            <Label Grid.Column="1" Text="{Binding Players.Count, StringFormat='{0} Players'}" Style="{StaticResource CaptionLabelStyle}" TextColor="{AppThemeBinding Light={StaticResource Slate600}, Dark={StaticResource Slate400}}" HorizontalOptions="End" VerticalOptions="Center" />
+                        </Grid>
+                        <views:CardBoxView Grid.Row="1" Players="{Binding Players}" />
+                    </Grid>
+                </DataTemplate>
+            </CollectionView.ItemTemplate>
         </CollectionView>
 
         <!-- Active Games Collection -->
@@ -35,6 +46,17 @@
             <CollectionView.EmptyView>
                 <Label Text="No active games for this player" Style="{StaticResource CaptionLabelStyle}" TextColor="{AppThemeBinding Light={StaticResource Slate600}, Dark={StaticResource Slate400}}" HorizontalOptions="Center" VerticalOptions="Center" />
             </CollectionView.EmptyView>
+            <CollectionView.ItemTemplate>
+                <DataTemplate x:DataType="models:CurrentGameModel">
+                    <Grid RowDefinitions="Auto,Auto" RowSpacing="8" Padding="12,8">
+                        <Grid Grid.Row="0" ColumnDefinitions="*,Auto" ColumnSpacing="12" VerticalOptions="Center">
+                            <Label Grid.Column="0" Text="{Binding GameStart, StringFormat='Started: {0:MMM dd, yyyy h:mm tt}'}" Style="{StaticResource CaptionLabelStyle}" TextColor="{AppThemeBinding Light={StaticResource Slate600}, Dark={StaticResource Slate400}}" HorizontalOptions="Start" VerticalOptions="Center" />
+                            <Label Grid.Column="1" Text="{Binding ScoreLimit, StringFormat='Score Limit: {0}'}" Style="{StaticResource CaptionLabelStyle}" TextColor="{AppThemeBinding Light={StaticResource Slate600}, Dark={StaticResource Slate400}}" HorizontalOptions="End" VerticalOptions="Center" />
+                        </Grid>
+                        <views:CardBoxView Grid.Row="1" Players="{Binding Players}" CurrentGame="{Binding .}" />
+                    </Grid>
+                </DataTemplate>
+            </CollectionView.ItemTemplate>
         </CollectionView>
 
         <!-- All Players List (when DisplayPlayers is true) -->

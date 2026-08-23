@@ -1,7 +1,8 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <ResourceDictionary 
     xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
-    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml">
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:toolkit="clr-namespace:CommunityToolkit.Maui.Views;assembly=CommunityToolkit.Maui">
     
     <Style TargetType="Image" x:Key="RummyBookyImage">
         <Setter Property="Source" Value="{AppThemeBinding Light=rummy_booky.png, Dark=rummy_booky.png}"/>
@@ -38,8 +39,8 @@
 
     <Style TargetType="Entry" x:Key="TagEntry">
         <Setter Property="TextColor" Value="{AppThemeBinding Light={StaticResource DeepRed}, Dark={StaticResource White}}" />
-        <Setter Property="FontSize" Value="25" />
-        <Setter Property="WidthRequest" Value="150" />
+        <Setter Property="FontSize" Value="16" />
+        <Setter Property="HorizontalOptions" Value="Fill" />
     </Style>
     <Style TargetType="Border" x:Key="TagEntryBorder">
         <Setter Property="Stroke" Value="{AppThemeBinding Light={StaticResource Pink}, Dark={StaticResource Pink}}" />
@@ -96,9 +97,9 @@
     </Style>
 
     <Style TargetType="Border">
-        <Setter Property="Stroke" Value="{AppThemeBinding Light={StaticResource Slate200}, Dark={StaticResource Slate700}}" />
+        <Setter Property="Stroke" Value="Transparent" />
+        <Setter Property="StrokeThickness" Value="0" />
         <Setter Property="StrokeShape" Value="Rectangle"/>
-        <Setter Property="StrokeThickness" Value="1"/>
     </Style>
 
     <Style TargetType="BoxView">

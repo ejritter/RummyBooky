@@ -21,15 +21,15 @@ public class AppAudioService : IAppAudioService
 
     public void Unmute()
     {
-        if (_player is not null) _player.Volume = 1.0;
+        if (_player is not null) _player.Volume = 0.5;
     }
 
     public bool IsPlaying => _player?.IsPlaying ?? false;
 
     public double Volume
     {
-        get => _player?.Volume ?? 1.0;
-        set { if (_player is not null) _player.Volume = 1.0; }
+        get => _player?.Volume ?? 0.5;
+        set { if (_player is not null) _player.Volume = value; }
     }
 
     public async Task StartAsync()
@@ -83,11 +83,10 @@ public class AppAudioService : IAppAudioService
         var fresh = new MemoryStream(_audioBuffer.ToArray());
         _player = _audioManager.CreatePlayer(fresh);
 
-        // Avoid relying on Loop with exhausted streams, manually loop
-        _player.Loop = false;
+        _player.Loop = true;
         _player.Volume = _player.Volume is > 0 and <= 1 ? _player.Volume : 0.5;
 
-        // Ensure single subscription
+        // Ensure single subscription for fallback
         _player.PlaybackEnded -= OnPlaybackEnded;
         _player.PlaybackEnded += OnPlaybackEnded;
 

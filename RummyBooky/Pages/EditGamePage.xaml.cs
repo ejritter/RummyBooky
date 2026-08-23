@@ -17,6 +17,15 @@ public partial class EditGamePage : BasePage<EditGameViewModel>, IQueryAttributa
         ViewModel.ApplyQueryAttributes(query);
     }
 
+    protected override void OnDisappearing()
+    {
+        base.OnDisappearing();
+        if (!ViewModel.IsSaved)
+        {
+            ViewModel.RevertToInitialState();
+        }
+    }
+
     private async void OnSaveClicked(object? sender, EventArgs e)
     {
         if (sender is VisualElement view)
@@ -33,3 +42,4 @@ public partial class EditGamePage : BasePage<EditGameViewModel>, IQueryAttributa
         }
     }
 }
+

@@ -1,4 +1,5 @@
 using System;
+using CommunityToolkit.Maui.Views;
 using Microsoft.Maui.Controls;
 using RummyBooky.Extensions;
 using RummyBooky.ViewModels;
@@ -19,4 +20,5 @@ public partial class GeneralPopupPage : BasePopupPage<GeneralPopupViewModel>
             await view.AnimatePressAsync();
         }
     }
-}
+}
+

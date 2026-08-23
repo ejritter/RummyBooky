@@ -1,57 +1,67 @@
-# RummyBooky Master Project Requirements
+# RummyBooky — Project Requirements & Master Reference
 
 ## 1. Project Overview & Purpose
-**RummyBooky** is a cross-platform .NET MAUI application designed to score, track, record, and manage Rummy card games. The application supports creating new games, tracking hands and rounds, computing player rankings and leaderboards, maintaining lifetime historical statistics, and resuming in-progress games.
+RummyBooky is a cross-platform .NET MAUI (targeting Android, Windows, iOS, Mac Catalyst) digital scorekeeper, game tracker, and player statistics management application for Rummy card games. It enables users to create games, track round-by-round player scores, recompute real-time totals and hand extremes, manage player identities and leaderboards, edit active and historical games, and enjoy custom background audio.
 
-## 2. Technology Stack
-- **Framework**: .NET MAUI 10.0 (`Microsoft.Maui.Controls 10.0.90`)
-- **Target Frameworks**: `net10.0-windows10.0.19041.0`, `net10.0-android`, `net10.0-ios`, `net10.0-maccatalyst`
-- **Architecture & MVVM**: `CommunityToolkit.Mvvm` (v8.4.2), Source Generators (`[ObservableProperty]`, `[RelayCommand]`, `[QueryProperty]`)
-- **UI & Toolkit**: `CommunityToolkit.Maui` (v15.0.0), Pure XAML styling, XAML Data Binding
-- **Audio & Logging**: `Plugin.Maui.Audio` (v4.0.0), `Serilog` (v4.4.0) with File Sinks
-- **Testing**: xUnit test suite (`tests/RummyBooky.Tests`)
+---
 
-## 3. Architecture & Code Paths
-- **Views & Pages**:
-  - `MainPage`: Entry dashboard displaying collapsed/expanded active game resume stacks (`CardBoxView`) and quick navigation.
-  - `NewGamePage`: New game setup, score limit definition, debounced & manual player search, suggestion carousel, player roster management, dealer assignment, and seating order.
-  - `CurrentGamePage`: Active game scoreboard, round progression, dealer indicator rotation, score calculation, winner/draw detection, and round history summary.
-  - `EditPlayerPage`: Player profile management, player name editing/renaming across historical records, lifetime statistics, and played/active games lists.
-  - `LeaderboardPage`: Global player rankings, rank badges, and lifetime statistics.
-  - `GeneralPopupPage`: Modal popups for game outcome confirmations, dealer selection, warnings, and error alerts.
-- **Services**:
-  - `GameService`: Game persistence (`savedgames/*.json`), aggregate player profile calculations, dealer selection & clockwise rotation, player removal, and player renaming.
-  - `AppAudioService`: Audio feedback for game actions.
-  - `IPopupService`: Modal dialog and popup management.
+## 2. Technology Stack & Dependencies
+- **Runtime & Target Frameworks**: .NET 10.0 (`net10.0-android`, `net10.0-windows10.0.19041.0`, `net10.0-ios`, `net10.0-maccatalyst`)
+- **UI & Architecture**: .NET MAUI with MVVM Pattern, CommunityToolkit.Mvvm (Source Generators, Partial Properties, RelayCommands), CommunityToolkit.Maui (Popups, Animations, Converters)
+- **Audio Engine**: `Plugin.Maui.Audio` (`AudioManager`) for looping background soundtracks and responsive muting/pausing
+- **Serialization & Persistence**: `System.Text.Json` polymorphic serialization stored in `FileSystem.AppDataDirectory/savedgames`
+- **Testing**: `xUnit`, `Moq`, and `FluentAssertions` in `tests/RummyBooky.Tests` (.NET 10.0)
 
-## 4. Functional Specifications & Requirements
+---
 
-### R1. Player Profile Management (`EditPlayerPage`)
-- Users must be able to view player profile details and historical stats.
-- Users must be able to edit and update a player's name.
-- Renaming a player must update their identity across all active and saved historical game files and reload the player aggregate dictionary.
-- Users must be able to remove a player with confirmation and game integrity preservation.
+## 3. Architecture & Key Code Paths
 
-### R2. New Game Creation & Player Management (`NewGamePage`)
-- **Player Selection & Unselection**:
-  - Users can search existing players or add new player names.
-  - If a user accidentally selects an existing player, they must be able to unselect/remove that player from the new game roster.
-  - If a user accidentally creates a new player instead of picking an existing match, they must be able to delete/undo the creation and choose the matching card from search suggestions.
-- **Search Controls & Safeguards**:
-  - Auto-search triggers on debounce when typing stops (250ms).
-  - Manual search executes immediately upon pressing Enter/Return or tapping the magnifying glass search icon.
-  - Search input is safeguarded against whitespace/empty queries: clearing the query immediately clears suggestions and restores the default new game view.
+### A. Data Models (`RummyBooky/Models`)
+- `GameModel`: Abstract polymorphic base class for games with `Players`, `Round` collection, `IsGameActive`, and `IsGameFinished`.
+- `CurrentGameModel`: Active in-progress game state with `ScoreLimit` and `GameStart`.
+- `PlayedGameModel`: Completed game state with `WinningPlayer`, `GameState` (`GameStatus`), and `GameEnd`.
+- `RoundModel`: Per-round metrics (`LeadingPlayer`, `PlayerHighestScoringHand`, `CurrentHighestScoredHandValue`, `PlayerLowestScoringHand`, `CurrentLowestScoredHandValue`, `RoundScores`).
+- `RoundScoreModel`: Player score entry for a round (`PlayerId`, `Score`).
+- `PlayerModel`: Player identity, rank symbol, card suit asset, and aggregate statistics (`TotalGamesPlayed`, `GamesWon`, `GamesLost`, `GamesForfeit`, `GameDraws`, `HighestScoredHand`, `LowestScoredHand`, `LifetimeScore`).
+- `PopupResultsModel`: Result structure for popup dialog confirmations.
 
-### R3. Dealer Selection & Seating Order Rotation
-- When starting a game, users can choose between:
-  1. Assigning the first dealer at random.
-  2. Selecting the specific player who will deal first.
-- In 2-player games: prompt/allow selection of the initial dealer (or random).
-- In 3+ player games: seating order determines the clockwise rotation of the dealer chip to the player's left on subsequent rounds (`(currentDealerIndex + 1) % playerCount`).
-- Player order in active game maintains consistent seating order rather than scrambling each round.
+### B. Core Services (`RummyBooky/Services`)
+- `GameService`: Central recomputation engine, JSON disk persistence, player lifetime statistics aggregation (`LoadAllPlayersDictionaryAsync`), and global ranking map (`BuildRankMap`).
+- `PopupService`: Wrapper for displaying custom modals via `CommunityToolkit.Maui.Views.Popup`.
+- `AppAudioService`: Singleton managing `the_gambler.mp3` background audio playback, looping, app lifecycle pause/resume, and volume muting.
 
-### R4. Game Play Scoreboard & Table Alignment (`CurrentGamePage`)
-- Scoreboard grid columns (Player, Total Score, Round Score input) and vertical/horizontal borders must align cleanly between header and data rows across platforms.
-- Player score inputs validate numeric entries and update scores upon round calculation.
-- Dealer badge displays next to the active dealer for the current round and rotates clockwise on round completion.
-- Highest and lowest played hands are tracked per round and displayed in the summary footer.
+### C. Pages & ViewModels (`RummyBooky/Pages`, `RummyBooky/ViewModels`)
+- `MainPage` / `MainPageViewModel`: Home dashboard displaying active games list, New Game / Leaderboard navigation buttons, and double-tap Gambler soundtrack pause/mute toggle on the logo.
+- `NewGamePage` / `NewGameViewModel`: Player selection and score limit setup for starting new games.
+- `CurrentGamePage` / `CurrentGameViewModel`: Active game scoreboard with round navigation (`< Round K of N >`), round score editing, real-time total recalculation, and game completion handling.
+- `EditGamePage` / `EditGameViewModel`: Dedicated game editor for updating Game Status, Winner, Score Limit, and round scores with diff confirmation dialogs.
+- `LeaderboardPage` / `LeaderboardViewModel`: Global standings sorted by wins and performance, with edit player navigation.
+- `EditPlayerPage` / `EditPlayerViewModel`: Player name modification with before/after diff confirmation prompts and single "Okay" success modals.
+- `GeneralPopupPage` / `GeneralPopupViewModel`: Reusable modal dialog with transparent window styling and clean card presentation.
+
+---
+
+## 4. Functional & Technical Specifications
+
+### A. Audio Management
+- Continuous looping background playback of `the_gambler.mp3` upon app startup.
+- Double-tap gesture on the MainPage book logo toggles audio playback (pause/resume or mute/unmute).
+- Automatic pause during application backgrounding (`OnSleep`) and resume on foregrounding (`OnResume`).
+
+### B. Modal Dialogs & Visual Styling
+- `BasePopupPage<TViewModel>` inherits from `CommunityToolkit.Maui.Views.Popup` with `Color="Transparent"`.
+- Clean card rendering with zero outer ghost borders or see-through rectangular margins.
+- `CanBeDismissedByTappingOutsideOfPopup = true` allows tapping outside to dismiss where appropriate.
+
+### C. Confirmation & Success Flows
+- **Edit Player**: Prompts with confirmation diff: `Player name will change from "{oldName}" to "{newName}". Are you sure you want to continue?`. On success, displays single "Okay" button.
+- **Edit Game**: Computes itemized diff of changed properties/scores before saving. On success, displays single "Okay" button.
+
+### D. Navigation Integrity
+- Direct single-tap back navigation (`<`) between child pages (`EditPlayerPage`, `EditGamePage`) and parent views (`LeaderboardPage`, `MainPage`) with debouncing guards (`_isNavigating`) preventing duplicate navigation pushes.
+
+---
+
+## 5. Automated Verification Standard
+- `dotnet test` test suite must pass with 0 failures before any commit.
+- Target platform builds (`net10.0-android`, `net10.0-windows10.0.19041.0`) must compile with 0 errors.

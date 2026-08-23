@@ -13,7 +13,7 @@
                     <Grid x:Name="PlayerNameChip" Grid.Column="0" Padding="12,8" Margin="8,0,0,0" BackgroundColor="{AppThemeBinding Light={StaticResource DeepRed}, Dark={StaticResource Pink}}" VerticalOptions="Fill">
                         <Label x:Name="PlayerNameLabel" Style="{StaticResource PlayerLabel}" Text="{Binding PlayerName}" HorizontalOptions="Center" VerticalOptions="Center" TextColor="{AppThemeBinding Light={StaticResource Slate50}, Dark={StaticResource Slate800}}" />
                     </Grid>
-                    <ImageButton x:Name="EditPlayerButton" Grid.Column="1" Source="{AppThemeBinding Light=edit_player_light.png, Dark=edit_player_dark.png}" Clicked="OnEditPlayerButtonClicked" Command="{Binding Source={x:Reference This}, Path=Command}" CommandParameter="{Binding .}">
+                    <ImageButton x:Name="EditPlayerButton" Grid.Column="1" Source="{AppThemeBinding Light=edit_player_light.png, Dark=edit_player_dark.png}" Clicked="OnEditPlayerButtonClicked">
                     </ImageButton>
                 </Grid>
             </Grid>

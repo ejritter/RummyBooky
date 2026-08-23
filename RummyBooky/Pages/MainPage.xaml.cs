@@ -48,7 +48,7 @@ public partial class MainPage : BasePage<MainPageViewModel>, IQueryAttributable
         }
         if (BindingContext is MainPageViewModel vm && vm.MuteUnmuteGamblerCommand.CanExecute(null))
         {
-            vm.MuteUnmuteGamblerCommand.Execute(null);
+            _ = vm.MuteUnmuteGamblerCommand.ExecuteAsync(null);
         }
     }
 

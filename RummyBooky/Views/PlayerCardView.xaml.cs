@@ -81,9 +81,9 @@ public partial class PlayerCardView : BaseView
 
 	private static void OnAssignedPlayerModelChanged(BindableObject bindable, object oldValue, object newValue)
 	{
-		if (bindable is PlayerCardView view && newValue is PlayerModel player)
+		if (bindable is PlayerCardView view)
 		{
-			view.BindingContext = player;
+			view.UpdateCardBindingContext();
 		}
 	}
 
@@ -106,6 +106,7 @@ public partial class PlayerCardView : BaseView
 
 	private void OnPlayerCardViewLoaded(object? sender, EventArgs e)
 	{
+		UpdateCardBindingContext();
 		ApplyInCardBoxVisualMode();
 		UpdatePlayerCardDimensions();
 	}
@@ -113,19 +114,18 @@ public partial class PlayerCardView : BaseView
 	protected override void OnBindingContextChanged()
 	{
 		base.OnBindingContextChanged();
-		if (BindingContext is PlayerModel player)
-		{
-			if (AssignedPlayerModel != player)
-			{
-				AssignedPlayerModel = player;
-			}
-		}
-		else if (AssignedPlayerModel is not null && BindingContext != AssignedPlayerModel)
-		{
-			BindingContext = AssignedPlayerModel;
-		}
+		UpdateCardBindingContext();
 		ApplyInCardBoxVisualMode();
 		UpdatePlayerCardDimensions();
+	}
+
+	private void UpdateCardBindingContext()
+	{
+		var effectivePlayer = AssignedPlayerModel ?? (BindingContext as PlayerModel);
+		if (CardBorder != null)
+		{
+			CardBorder.BindingContext = effectivePlayer;
+		}
 	}
 
 	protected override void OnPropertyChanged(string? propertyName = null)
@@ -248,24 +248,32 @@ public partial class PlayerCardView : BaseView
 		}
 	}
 
+	private bool _isNavigating;
+
 	private async void OnEditPlayerButtonClicked(object? sender, EventArgs e)
 	{
-		await RummyBooky.Extensions.ViewExtensions.AnimatePressAsync(EditPlayerButton);
-
-		var targetPlayer = AssignedPlayerModel ?? BindingContext as PlayerModel;
-		if (targetPlayer is null)
+		if (_isNavigating)
 		{
 			return;
 		}
 
-		if (Command != null && Command.CanExecute(targetPlayer))
-		{
-			Command.Execute(targetPlayer);
-			return;
-		}
-
+		_isNavigating = true;
 		try
 		{
+			await RummyBooky.Extensions.ViewExtensions.AnimatePressAsync(EditPlayerButton);
+
+			var targetPlayer = AssignedPlayerModel ?? CardBorder?.BindingContext as PlayerModel ?? BindingContext as PlayerModel;
+			if (targetPlayer is null)
+			{
+				return;
+			}
+
+			if (Command != null && Command.CanExecute(targetPlayer))
+			{
+				Command.Execute(targetPlayer);
+				return;
+			}
+
 			if (Shell.Current?.CurrentPage is EditPlayerPage editPage &&
 				editPage.BindingContext is EditPlayerViewModel editVm)
 			{
@@ -284,6 +292,11 @@ public partial class PlayerCardView : BaseView
 		catch (Exception ex)
 		{
 			System.Diagnostics.Debug.WriteLine($"[PlayerCardView] Navigation error: {ex.Message}");
+		}
+		finally
+		{
+			await Task.Delay(500);
+			_isNavigating = false;
 		}
 	}
 }

@@ -15,17 +15,30 @@ public partial class LeaderboardViewModel(IPopupService popupService, GameServic
     public partial bool DisplayLeaderboard { get; set; } = false;
 
 
+    private bool _isNavigatingToEditPlayer;
+
     [RelayCommand]
     private async Task EditPlayer(object? sender)
     {
+        if (_isNavigatingToEditPlayer)
+            return;
+
         if (sender is PlayerModel playerModel)
         {
-            await Shell.Current.GoToAsync(nameof(EditPlayerPage), animate: true, parameters: new Dictionary<string, object>
+            try
             {
-                [nameof(EditPlayerViewModel.CurrentPlayer)] = playerModel
-            });
+                _isNavigatingToEditPlayer = true;
+                await Shell.Current.GoToAsync(nameof(EditPlayerPage), animate: true, parameters: new Dictionary<string, object>
+                {
+                    [nameof(EditPlayerViewModel.CurrentPlayer)] = playerModel
+                });
+            }
+            finally
+            {
+                await Task.Delay(500);
+                _isNavigatingToEditPlayer = false;
+            }
         }
-
     }
     [RelayCommand]
     private async Task Appearing()

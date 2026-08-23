@@ -1,94 +1,39 @@
-# Master To-Do List - RummyBooky
+# RummyBooky — Master Task Board & To-Do List
 
-## Active Tasks & Issue Tracking
+## 1. Recently Completed Tasks
 
-### [High] Task 1: Fix Edit Player Screen Name Editing (R1)
-- **Status**: Completed
-- **Files**: `RummyBooky/Pages/EditPlayerPage.xaml`, `RummyBooky/Pages/EditPlayerPage.xaml.cs`, `RummyBooky/ViewModels/EditPlayerViewModel.cs`, `RummyBooky/Services/GameService.cs`
-- **Details**:
-  - Added `UpdatePlayerNameCommand` and `CanExecuteUpdatePlayerNameCommand` to `EditPlayerViewModel`.
-  - Added `UpdatePlayerNameButton` and ReturnCommand in `EditPlayerPage.xaml` with press animations in `.xaml.cs`.
-  - Implemented `GameService.UpdatePlayerNameHistory` to mutate in-memory player names, update `_allPlayers` dictionary cache, propagate across all saved active and played games on disk, and handle zero-game players.
-  - Verified via `PlayerRenamingTests.cs` (3 unit tests passing).
+- [x] **Continuous Gambler Soundtrack & Double-Tap Control**
+  - Continuous looping playback of `the_gambler.mp3` on startup.
+  - Double-tap logo gesture on `MainPage` toggling pause/resume or mute/unmute.
+  - App lifecycle integration in `App.xaml.cs` (pause on sleep, resume on foreground).
+  - Target files: `RummyBooky/Services/AppAudioService.cs`, `RummyBooky/ViewModels/MainPageViewModel.cs`, `RummyBooky/App.xaml.cs`, `tests/RummyBooky.Tests/GamblerAudioPlaybackTests.cs`.
 
-### [High] Task 2: Fix Player Selection / Unselection & Accidentally Created Player Undo on New Game Screen (R2)
-- **Status**: Completed
-- **Files**: `RummyBooky/Pages/NewGamePage.xaml`, `RummyBooky/Pages/NewGamePage.xaml.cs`, `RummyBooky/ViewModels/NewGameViewModel.cs`
-- **Details**:
-  - Added instant unselect/remove button ("✕") directly on roster table rows in `NewGamePage.xaml` and Flyout/SwipeView items.
-  - Tracked `LastAddedPlayer` and `LastSearchQuery` in `NewGameViewModel`. If a user accidentally creates a new player and removes them, `RemovePlayer` automatically restores the search text and suggestions carousel so the existing player card can be chosen.
-  - Verified via `NewGameRosterAndSearchTests.cs` (4 unit tests passing).
+- [x] **Popup Transparent Border Elimination**
+  - Derived `BasePopupPage<TViewModel>` directly from `CommunityToolkit.Maui.Views.Popup`.
+  - Set `Color="Transparent"` on popups and removed outer `Margin="24"` in `GeneralPopupPage.xaml`.
+  - Set default `Border` stroke to transparent in `Styles.xaml` to eliminate ghost borders across all dialogs.
+  - Enabled `CanBeDismissedByTappingOutsideOfPopup = true`.
+  - Target files: `RummyBooky/Pages/BasePopupPage.cs`, `RummyBooky/Pages/GeneralPopupPage.xaml`, `RummyBooky/Resources/Styles/Styles.xaml`.
 
-### [High] Task 3: Add Manual Search Button & Safeguard Search on New Game Screen (R2)
-- **Status**: Completed
-- **Files**: `RummyBooky/Pages/NewGamePage.xaml`, `RummyBooky/Pages/NewGamePage.xaml.cs`, `RummyBooky/ViewModels/NewGameViewModel.cs`
-- **Details**:
-  - Added magnifying glass Search button beside `EntryPlayerName` bound to `SearchPlayerSuggestionsCommand`.
-  - Configured `ReturnType="Search"` and `ReturnCommand="{Binding SearchPlayerSuggestionsCommand}"` on `EntryPlayerName`.
-  - Safeguarded search logic: empty/whitespace queries immediately clear suggestions, cancel debounce timers, and restore default roster view.
-  - Verified via `NewGameRosterAndSearchTests.cs`.
+- [x] **Edit Player & Edit Game Confirmation Diffs & Single "Okay" Modals**
+  - Pre-save confirmation diff modal showing before/after player name changes.
+  - Pre-save confirmation diff modal showing all modified properties/scores when editing active games.
+  - Success modals display only "Okay" / tap-to-dismiss without "Quit" or "Cancel" buttons.
+  - Target files: `RummyBooky/ViewModels/EditPlayerViewModel.cs`, `RummyBooky/ViewModels/EditGameViewModel.cs`.
 
-### [High] Task 4: Fix Table Grid Alignment & Borders on Current Game Page (R4)
-- **Status**: Completed
-- **Files**: `RummyBooky/Pages/CurrentGamePage.xaml`
-- **Details**:
-  - Aligned header grid and row item grid column definitions (`*,2,95,2,115`) and row definitions (`65,1`).
-  - Added matching vertical divider BoxViews in columns 1 and 3 in header and data rows.
-  - Styled `PlayerScoreEntry` in a neat `TagEntryBorder` for centered, crisp alignment.
-  - Verified via `ScoreboardAlignmentTests.cs` (2 unit tests passing).
+- [x] **Edit Player Placeholder Clipping Fix**
+  - Reduced `TagEntry` font size from 25 to 16 and replaced fixed `WidthRequest="150"` with `HorizontalOptions="Fill"`.
+  - Set `HorizontalTextAlignment="Center"` on `EntryNewPlayerName` in `EditPlayerPage.xaml`.
+  - Target files: `RummyBooky/Resources/Styles/Styles.xaml`, `RummyBooky/Pages/EditPlayerPage.xaml`.
 
-### [High] Task 5: Implement Dealer Selection Choice & Seating Order Left-Rotation (R3)
-- **Status**: Completed
-- **Files**: `RummyBooky/ViewModels/NewGameViewModel.cs`, `RummyBooky/ViewModels/CurrentGameViewModel.cs`, `RummyBooky/Services/GameService.cs`, `RummyBooky/Extensions/GameModelExtensions.cs`
-- **Details**:
-  - Removed `OrderBy(p => p.PlayerName)` in `GameModelExtensions.ConvertToCurrentGame` to lock in table seating order from NewGamePage.
-  - Removed `ReorderPlayersForDisplay()` from `CurrentGameViewModel` to prevent destroying seating order on round advance or score calculation.
-  - In `NewGameViewModel.StartGame`, if no dealer was manually selected, prompted user to assign random dealer or choose starting dealer (with 2-player vs 3+ player seating rotation).
-  - Advanced dealer clockwise to the player's left (`(currentDealerIndex + 1) % count`) on each round progression.
-  - Verified via `DealerRotationAndSeatingOrderTests.cs` (4 unit tests passing).
+- [x] **Single Back Navigation Fix from Edit Player**
+  - Removed duplicate `Command` / `CommandParameter` on `EditPlayerButton` in `PlayerCardView.xaml`.
+  - Added navigation guard `_isNavigating` in `PlayerCardView.xaml.cs` and `_isNavigatingToEditPlayer` in `LeaderboardViewModel.cs` to prevent double-page pushing onto Shell navigation stack.
+  - Target files: `RummyBooky/Views/PlayerCardView.xaml`, `RummyBooky/Views/PlayerCardView.xaml.cs`, `RummyBooky/ViewModels/LeaderboardViewModel.cs`.
 
-### [High] Task 7: Fix Leaderboard Standings Refresh & New Game UI/SVG Polish
-- **Status**: Completed
-- **Files**: `RummyBooky/Services/GameService.cs`, `RummyBooky/ViewModels/LeaderboardViewModel.cs`, `RummyBooky/Pages/LeaderboardPage.xaml`, `RummyBooky/Views/PlayerCardView.xaml.cs`, `RummyBooky/Pages/NewGamePage.xaml`, `RummyBooky/Resources/Images/player_new.svg`, `RummyBooky/Resources/Images/player_existing.svg`, `tests/RummyBooky.Tests/LeaderboardTests.cs`
-- **Details**:
-  - Fixed `LeaderboardViewModel` to bind `ObservableCollection<PlayerModel>` directly to avoid empty bindings in `PlayerCardView`.
-  - Added `await LoadAllPlayersDictionaryAsync()` in `GameService.GetTopPlayersAsync` to reload fresh stats from disk whenever Standings are refreshed.
-  - Synced `BindingContext` in `PlayerCardView.xaml.cs` to prevent stale/null player data.
-  - Aligned Score Limit box, Player Name box, and Add Player button with matching 180px widths and left-alignment on New Game page.
-  - Created and embedded crisp SVG icons (`player_new.svg` and `player_existing.svg`) for New vs Existing player indication.
-  - Optimized New Game roster table column definitions (`*,2,65,2,65,2,65,2,65,2,65`) giving player names ample room (~360px) so names are fully visible.
-  - Added unit test suite `LeaderboardTests.cs` (68 total tests passing).
+---
 
-### [High] Task 9: In-Game Previous Round Editing & Dedicated Edit Game Screen (R1, R2, R3)
-- **Status**: Completed
-- **Files**: `RummyBooky/Pages/CurrentGamePage.xaml`, `RummyBooky/ViewModels/CurrentGameViewModel.cs`, `RummyBooky/Pages/EditGamePage.xaml`, `RummyBooky/Pages/EditGamePage.xaml.cs`, `RummyBooky/ViewModels/EditGameViewModel.cs`, `RummyBooky/Services/GameService.cs`, `tests/RummyBooky.Tests/PreviousRoundAndGameEditingTests.cs`
-- **Details**:
-  - Added in-game round navigation (`◀`, `▶`, `Return to Current Round`) and round score editing in `CurrentGamePage.xaml` / `CurrentGameViewModel.cs`. Modifying earlier round scores recomputes all players' running total scores, highest/lowest scored hands, leading players, and updates disk persistence.
-  - Implemented full dedicated `EditGamePage` and `EditGameViewModel` accessible from game cards and Current Game navigation. Supports editing Score Limit, Game Status (Won, Draw, Forfeit, In-Progress), Winner selection (for resolving ties), and individual round scores.
-  - Added 7 unit tests in `PreviousRoundAndGameEditingTests.cs` verifying dynamic recalculation and game updates.
+## 2. Active & Backlog Tasks
 
-### [High] Task 10: Theme-Aware Vector Assets & Android Hardware Verification
-- **Status**: Completed
-- **Files**: `RummyBooky/Resources/Images/player_new_light.svg`, `RummyBooky/Resources/Images/player_new_dark.svg`, `RummyBooky/Resources/Images/player_existing_light.svg`, `RummyBooky/Resources/Images/player_existing_dark.svg`, `RummyBooky/Pages/NewGamePage.xaml`, `RummyBooky/Models/PlayerModel.cs`
-- **Details**:
-  - Created dedicated Light and Dark theme SVG vector assets for New and Existing player badges.
-  - Configured `{AppThemeBinding}` in XAML `Image.Triggers` for dynamic theme adaptation.
-  - Connected via ADB to physical Android device `10.0.0.66:45305`, built and deployed `net10.0-android` package, forwarded DevFlow ports, and verified live runtime behavior, layout alignments, theme badges, and gameplay navigation.
-
-### [High] Task 12: Leaderboard Layout Optimization & Live Production Data Recovery
-- **Status**: Completed
-- **Files**: `RummyBooky/Pages/LeaderboardPage.xaml`, `RummyBooky/ViewModels/LeaderboardViewModel.cs`, `RummyBooky/Services/GameService.cs`
-- **Details**:
-  - Replaced nested `CollectionView` with `BindableLayout` inside `ScrollView` to eliminate Android measurement/collapse bugs and enable smooth vertical scrolling.
-  - Corrected polymorphic serialization order (`$type` first) to ensure clean loading of historical games into `_allPlayers` dictionary.
-  - Verified live on Google Pixel Tablet: Leaderboard displays ranked standings (Eric Ritter [Ace - 225 High Hand], Bruce Marchegiani [King], Shawn Tambeau [Queen]).
-  - Autocomplete search on New Game screen immediately retrieves saved player profiles.
-
-### [Medium] Task 13: Full Solution Testing & Validation
-- **Status**: Completed
-- **Files**: `tests/RummyBooky.Tests/*`
-- **Details**:
-  - All 167 unit tests across the test suite pass cleanly (`0 failed, 167 passed`).
-  - Both Windows (`net10.0-windows10.0.19041.0`) and Android (`net10.0-android`) build with 0 errors and 0 warnings.
-  - Verified live on physical Android device (`10.0.0.66:45305`) and Windows Desktop.
-
+- [ ] `[Low]` **Offline Data Export/Import**: Provide JSON or CSV backup/export options for lifetime player standings and game logs.
+- [ ] `[Low]` **Custom Sound Effects**: Add optional sound effects for round completion and victory announcements.

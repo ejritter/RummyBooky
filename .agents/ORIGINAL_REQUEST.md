@@ -97,3 +97,45 @@ Requirements:
 4. R4: Automated tests & Live physical device E2E verification (all unit tests in tests/RummyBooky.Tests pass with 0 errors; deploy signed Release APK to user profile 0 on physical Pixel Tablet at 10.0.0.66:45305 and perform live E2E UI testing with screencaps).
 
 Organize your subagents to inspect the codebase, diagnose the root cause, implement any necessary fixes, verify all unit tests, and perform physical device deployment and E2E verification. Maintain your plan.md, progress.md, and context.md in your directory .agents/orchestrator/. When complete, report back your findings and handoff.
+
+## Follow-up — 2026-08-23T14:36:57Z
+
+This is a single self-contained fix; keep it small and focused.
+Implement popup styling fixes and confirmation diff prompts for Player and Game editing workflows in RummyBooky (.NET MAUI, .NET 10).
+
+Working directory: c:\Dev\RummyBookyMaui
+
+## Requirements
+
+### R1. Eliminate Popup Transparent / See-Through Outer Border
+- In GeneralPopupPage.xaml, GeneralPopupViewModel.cs, and BasePopupPage.cs (or Android platform styles/dialog theme), eliminate any outer see-through border, unwanted margin, or platform dialog window background stroke artifacts around the popup card.
+- Ensure the popup card renders with a clean, solid background and sleek rounded border without any ghosting or secondary outer border.
+
+### R2. Edit Player Confirmation & Success Flow
+- When editing a player name in EditPlayerViewModel.cs, prompt the user with a confirmation dialog before applying the change.
+- The confirmation dialog must show the before and after values (e.g. `Player name will change from "{oldName}" to "{newName}". Are you sure you want to continue?`).
+- If the user cancels the confirmation, do not proceed with the change.
+- Upon successful update, the success popup must display only an "Okay" button (or allow Tap-To-Dismiss). It must NOT display "Quit" or "Cancel" buttons.
+
+### R3. Edit Game Confirmation & Success Flow
+- When saving modifications in EditGameViewModel.cs, inspect what fields or round scores have changed.
+- Prompt the user with a confirmation dialog detailing all changes being made (e.g. Score Limit, Game Status, Winner, or specific round score changes) before persisting.
+- If the user cancels, do not proceed.
+- Upon successful update, display an "Okay" button (or allow Tap-To-Dismiss) without "Quit" or "Cancel".
+
+### R4. Automated Interactive Verification on Android Emulator
+- Build and deploy the signed APK to the running Android emulator (emulator-5554).
+- Interactively exercise the Edit Player flow (confirming the diff prompt, verifying the success modal buttons, verifying player update).
+- Interactively exercise the Edit Game flow (modifying a game, confirming the diff prompt, verifying the success modal).
+- Capture screenshots verifying that the see-through border is completely gone on all popups.
+
+## Acceptance Criteria
+
+### Visual & Behavioral Criteria
+- [ ] No see-through or secondary border appears around popup dialogs on Android or Windows.
+- [ ] Editing a player name prompts a confirmation modal with old and new names before executing.
+- [ ] Editing a game prompts a confirmation modal listing modified properties before saving.
+- [ ] Success modals for both flows display only "Okay" / tap-to-dismiss, never "Quit" or "Cancel".
+- [ ] Canceling either confirmation dialog cancels the operation without persisting changes.
+- [ ] All unit test suites pass (dotnet test).
+- [ ] Live UI screenshots captured on Android emulator proving resolution of all visual criteria.

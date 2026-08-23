@@ -43,17 +43,45 @@ public sealed partial class EditPlayerViewModel(IPopupService popupService, Game
             return;
 
         var oldName = CurrentPlayer.PlayerName;
+        var confirmMessage = $"Player name will change from \"{oldName}\" to \"{newName}\". Are you sure you want to continue?";
+        var confirmResult = await ShowPopupAsync(
+            title: "Confirm Name Change",
+            message: confirmMessage,
+            isDismissable: false,
+            showOkay: true,
+            showCancel: true,
+            showQuit: false,
+            okayText: "Confirm",
+            cancelText: "Cancel");
+
+        if (!confirmResult.Confirmed)
+            return;
+
         var success = await _gameService.UpdatePlayerNameHistory(CurrentPlayer, newName);
         if (success)
         {
             CurrentPlayer.PlayerName = newName;
             NewPlayerNameText = string.Empty;
             await LoadGameCollectionsWithSelectedPlayer(CurrentPlayer);
-            _ = await ShowPopupAsync(title: "Success", message: $"Player '{oldName}' updated to '{newName}'.", isDismissable: true);
+            _ = await ShowPopupAsync(
+                title: "Success",
+                message: $"Player '{oldName}' updated to '{newName}'.",
+                isDismissable: true,
+                showOkay: true,
+                showCancel: false,
+                showQuit: false,
+                okayText: "Okay");
         }
         else
         {
-            _ = await ShowPopupAsync(title: "Warning", message: "Failed to update player name. Please consult the logs.", isDismissable: false);
+            _ = await ShowPopupAsync(
+                title: "Warning",
+                message: "Failed to update player name. Please consult the logs.",
+                isDismissable: false,
+                showOkay: true,
+                showCancel: false,
+                showQuit: false,
+                okayText: "Okay");
         }
     }
 
@@ -63,19 +91,41 @@ public sealed partial class EditPlayerViewModel(IPopupService popupService, Game
         if (CurrentPlayer is null)
             return;
         var message = GenerateRemovePlayerMessage();
-        var confirm = await ShowPopupAsync(title: "Warning!", message: message, isDismissable: false);
+        var confirm = await ShowPopupAsync(
+            title: "Warning!",
+            message: message,
+            isDismissable: false,
+            showOkay: true,
+            showCancel: true,
+            showQuit: false,
+            okayText: "Confirm",
+            cancelText: "Cancel");
 
         if (confirm.Confirmed == true)
         {
             var results = await _gameService.RemovePlayerFromHistory(CurrentPlayer);
-            if(results == true)
+            if (results == true)
             {
-                _ = await ShowPopupAsync(title: "Info!", message: "Completed.", isDismissable: true);
+                _ = await ShowPopupAsync(
+                    title: "Info!",
+                    message: "Completed.",
+                    isDismissable: true,
+                    showOkay: true,
+                    showCancel: false,
+                    showQuit: false,
+                    okayText: "Okay");
                 await Shell.Current.GoToAsync("..");
             }
             else
             {
-                _ = await ShowPopupAsync(title: "Warning"!, message: "Something went wrong, please consult the logs.", isDismissable: false);
+                _ = await ShowPopupAsync(
+                    title: "Warning!",
+                    message: "Something went wrong, please consult the logs.",
+                    isDismissable: false,
+                    showOkay: true,
+                    showCancel: false,
+                    showQuit: false,
+                    okayText: "Okay");
             }
         }
     }

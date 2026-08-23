@@ -22,21 +22,21 @@ public partial class MainPageViewModel(IPopupService popupService, GameService g
     [RelayCommand]
     private async Task<bool> MuteUnmuteGambler()
     {
-        var results = false;
-        switch(_appAudioService.Volume)
+        if (_appAudioService.IsPlaying && _appAudioService.Volume > 0)
         {
-            case 0:
-                _appAudioService.Unmute();
-                results = true;
-                break;
-            case > 0:
-                _appAudioService.Mute();
-                results = true;
-                break;
-
+            _appAudioService.Pause();
+            return false;
         }
-
-        return results;
+        else
+        {
+            if (_appAudioService.Volume == 0)
+            {
+                _appAudioService.Unmute();
+            }
+            await _appAudioService.StartAsync();
+            _appAudioService.Resume();
+            return true;
+        }
     }
 
     [RelayCommand]

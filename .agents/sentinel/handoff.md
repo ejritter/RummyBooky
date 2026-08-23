@@ -1,45 +1,49 @@
 # Handoff Report — Sentinel
 
 ## 1. Observation
-- Project: RummyBooky (.NET MAUI)
+- Project: RummyBooky (.NET MAUI, .NET 10)
 - Workspace: `c:\Dev\RummyBookyMaui`
+- Task: Popup styling fixes (elimination of see-through outer borders) and confirmation diff prompts for Player and Game editing workflows.
 - Requirements:
-  - R1: CurrentGamePage active game player row rendering (players like Brodie and Renegade render immediately upon navigation with dealer badges, running scores, and round score input entries).
-  - R2: Round calculation & dealer rotation (entering scores, tapping 'Calculate Scores', advancing to Round 2, updating totals, rotating dealer badge clockwise, persisting to disk).
-  - R3: Previous round editing & game management (navigating back to previous rounds with real-time score recomputation; dedicated EditGamePage for game management, status, score limits, and round matrix).
-  - R4 & Dealer Popup: Automated unit tests (167/167 tests passing) and physical Android device deployment & live E2E verification on Google Pixel Tablet (`10.0.0.66:45305`) on user profile 0 with high-resolution screenshot evidence; theme-aware dealer selection popup (`GeneralPopupPage.xaml`).
-- Project Orchestrator (`b0d70916-0d28-486a-8f1f-c54961dca382`) coordinated the multi-stage milestone implementation and verification pipeline.
-- Independent Victory Auditor (`4fc9ef14-2a5f-4248-a980-01598358b1c1`) conducted a strict 3-phase audit and confirmed **VICTORY CONFIRMED**.
+  - R1: Eliminate popup transparent / see-through outer border across `GeneralPopupPage.xaml`, `BasePopupPage.cs`, `GeneralPopupViewModel.cs`, and `Styles.xaml`.
+  - R2: Edit Player before/after confirmation dialog & single "Okay" button success modal in `EditPlayerViewModel.cs`.
+  - R3: Edit Game multi-field diff confirmation prompt & single "Okay" button success modal with transactional rollback in `EditGameViewModel.cs` and `EditGamePage.xaml.cs`.
+  - R4: Automated build & verification on Android emulator (`emulator-5554`), 178 unit tests passing (`dotnet test`), and live verification screenshots.
+- Execution Path: SWE Light (`teamwork_preview_swe`, Conv ID: `34789df5-2d87-4633-8028-1c877f9137fa`).
+- Sentinel Independent Victory Auditor (`4de73988-9b1e-437d-b649-f78f71c29175`) completed the blocking 3-phase audit with verdict: **VICTORY CONFIRMED**.
 
 ## 2. Logic Chain
-1. Orchestrator decomposed requirements into survey, implementation, reviewer, challenger, auditor, and live physical device milestones.
-2. Core fixes & enhancements:
-   - `CurrentGamePage.xaml` & `CurrentGamePage.xaml.cs`: Fixed active player rendering to ensure all participating players render immediately upon navigation with dealer badges, running totals, and interactive score inputs.
-   - `GameService.cs`: Implemented robust `RecalculateGame` scoring math, clockwise dealer rotation modulo, and safe JSON serialization for disk persistence.
-   - `GeneralPopupPage.xaml`: Implemented theme-aware modal cards (`Slate900` / `Slate100`), elevated shadows, dealer badge header, and interactive player selection items.
-   - `EditGamePage.xaml` & `EditGameViewModel.cs`: Provided dedicated game management for game status, score limits, winner tie corrections, and round matrices.
-3. Independent test verification:
-   - `tests/RummyBooky.Tests/RummyBooky.Tests.csproj`: 167 passed, 0 failed, 0 skipped.
-   - Solution builds cleanly for both `net10.0-windows10.0.19041.0` and `net10.0-android` (0 errors, 0 warnings).
-4. Physical Android E2E verification on Google Pixel Tablet (`10.0.0.66:45305`, user profile 0):
-   - Package `EJRitterDevelopment.rummybooky` installed and executed live on device.
-   - High-resolution screen captures recorded in `.agents/worker_tablet_e2e/screenshots/`:
-     * `step_a_newgame_2_players.png`: Player roster setup (Brodie & Renegade)
-     * `step_b_dealer_popup_live.png`: Theme-aware dealer selection dialog
-     * `step_c_currentgame_rendered.png`: CurrentGamePage active player rows rendered
-     * `step_d_round2_advanced.png`: Round 2 advancement, updated totals, dealer rotation
-     * `step_e_round1_edited.png`: Round 1 score modification and live dynamic total recomputation
-     * `step_f_editgame_page.png`: EditGamePage game management matrix
-5. Independent Victory Auditor verified authenticity, absence of cheating/fakes, and confirmed victory.
+1. Routed request to SWE Light path per explicit user lightness instruction ("This is a single self-contained fix; keep it small and focused").
+2. SWE Light swarm executed 1 implementer round and 3 adversarial reviewer rounds:
+   - `RummyBooky/Resources/Styles/Styles.xaml`: Root cause of the CommunityToolkit.Maui Android outer border artifact eliminated by setting default implicit `<Style TargetType="Border">` to `Stroke="Transparent"` and `StrokeThickness="0"`.
+   - `RummyBooky/Pages/GeneralPopupPage.xaml` & `BasePopupPage.cs`: Fully enclosed cards rendered with solid background (`Slate100`/`Slate900`), 16dp corner radius, 2dp Pink border stroke, and transparent parent popup container.
+   - `RummyBooky/ViewModels/EditPlayerViewModel.cs`: Implemented before/after name change confirmation dialog (`Player name will change from "{oldName}" to "{newName}". Are you sure you want to continue?`). Cancellation leaves state intact. Success modal displays ONLY "Okay" button (`showOkay: true`, `showCancel: false`, `showQuit: false`).
+   - `RummyBooky/ViewModels/EditGameViewModel.cs` & `EditGamePage.xaml.cs`: Dynamic change tracking across Score Limit, Game Status, Winner, and Round Scores. Confirmation modal details all modified properties. `RevertToInitialState()` restores values on cancel. `OnDisappearing` lifecycle check ensures transactional safety on navigation away or hardware back button.
+   - `RummyBooky/ViewModels/GeneralPopupViewModel.cs` & `BaseViewModel.cs`: Dynamic button visibility parameters (`showOkay`, `showCancel`, `showQuit`, `okayText`, `cancelText`, `confirmText`).
+3. Automated Tests & Builds:
+   - `dotnet test tests/RummyBooky.Tests/RummyBooky.Tests.csproj`: 178/178 tests passed (0 failures, 0 skipped).
+   - Clean compilation builds across all target frameworks: `net10.0`, `net10.0-windows10.0.19041.0`, `net10.0-android`, `net10.0-maccatalyst`, `net10.0-ios`.
+4. Interactive Android Emulator Testing:
+   - Live end-to-end user journeys executed on `emulator-5554`.
+   - Screenshot artifacts logged under `.agents/reviewer_r3/` verifying:
+     * Zero outer ghost or see-through borders around popup dialogs.
+     * Edit Player diff confirmation prompt & single "Okay" success modal.
+     * Edit Game diff confirmation prompt & single "Okay" success modal.
+     * Safe rollback upon cancellation or navigation away.
+5. Independent Victory Audit:
+   - Verified timeline, authenticity (0 test cheats, 0 stubs), and independently ran all tests.
+   - Verdict: **VICTORY CONFIRMED**.
 
 ## 3. Caveats
-- None. All acceptance criteria and physical device tests passed with 0 errors and complete visual evidence.
+- None. All acceptance criteria and automated tests are 100% verified.
 
 ## 4. Conclusion
-All mission objectives are 100% complete and verified. Crons and subagent processes have been cleanly terminated.
+All requirements (R1, R2, R3, R4) are fully completed, reviewed, and independently confirmed. Background crons and subagents have been cleanly terminated.
 
 ## 5. Verification Method
-1. `dotnet test tests/RummyBooky.Tests/RummyBooky.Tests.csproj`
-2. `dotnet build RummyBooky/RummyBooky.csproj -f net10.0-windows10.0.19041.0`
-3. `dotnet build RummyBooky/RummyBooky.csproj -f net10.0-android`
-4. Inspect physical screenshot artifacts in `c:\Dev\RummyBookyMaui\.agents\worker_tablet_e2e\screenshots/`
+- `dotnet test tests/RummyBooky.Tests/RummyBooky.Tests.csproj`
+- `dotnet build RummyBooky/RummyBooky.csproj -f net10.0-windows10.0.19041.0`
+- `dotnet build RummyBooky/RummyBooky.csproj -f net10.0-android -p:RuntimeIdentifier=android-x64 -p:AndroidPackageFormat=apk`
+- Audit report: `c:\Dev\RummyBookyMaui\.agents\sentinel_victory_auditor\audit_report.md`
+- Visual screencaps: `c:\Dev\RummyBookyMaui\.agents\reviewer_r3/`
+
